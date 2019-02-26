@@ -1,0 +1,152 @@
+#' @useDynLib gpcurves
+#' @importFrom Rcpp sourceCpp
+gp_fcst_curves <- function(x, mats_vec = 1:nrow(x), obs_dates = 1:ncol(x),
+                           l1 = 1, lambda = 0.01, theta = c(1, 1),
+                           method = c("gaussian", "matern32", "matern52"),
+                           inv_kernel = c("ginv", "chol"),
+                           h = 5, level = NULL)
+{
+
+  method <- match.arg(method)
+
+  x <- as.matrix(x)
+
+  # nb of observation dates
+  n <- ncol(x)
+
+  # nb time to maturities
+  p <- nrow(x)
+
+  # total obs.
+  np <- n*p
+
+  # observation dates (beware...)
+  # time to maturities
+  stopifnot(length(obs_dates) == n || length(mats_vec) == p)
+
+  # out-of-sample dates
+  oos_dates <- (n + 1):(n + h)
+
+  # Training sample
+  y <- as.vector(x)
+  X <- expand.grid.alt(mats_vec, obs_dates)
+  scaled_X <- my_scale(X)
+  #xreg <- as.matrix(scaled_X$res)
+  xreg <- scaled_X$res
+
+  # Testing sample
+  newX <- expand.grid.alt(mats_vec, oos_dates)
+  scaled_newX <- my_scale(newX, xm = scaled_X$xm,
+                          xsd = scaled_X$xsd)
+
+  # K
+  K <- switch(method,
+              "gaussian" = gpcurves::gaussian_kxx_cpp(x = xreg, l = l1, theta = theta),
+              "matern32" = gpcurves::matern32_kxx_cpp(x = xreg, l = l1, theta = theta),
+              "matern52" = gpcurves::matern52_kxx_cpp(x = xreg, l = l1, theta = theta))
+
+  # (K + lambda*I)^-1
+  invK <- switch(match.arg(inv_kernel),
+                 "ginv" = MASS::ginv(K + lambda*diag(np)),
+                 "chol" = chol2inv(chol(K + lambda*diag(np))))
+
+  # ((K + lambda*I)^-1)y
+  ym <- mean(y)
+  centered_y <- y - ym
+  mat_coefs <- invK%*%centered_y
+
+  # K*
+  K_star <- switch(method,
+                   "gaussian" = gaussian_kxstar_cpp(x = xreg, l = l1,
+                                 newx = scaled_newX,
+                                 theta  = theta),
+                   "matern32" = matern32_kxstar_cpp(x = xreg, l = l1,
+                                                    newx = scaled_newX,
+                                                    theta  = theta),
+                   "matern52" = matern52_kxstar_cpp(x = xreg, l = l1,
+                                                    newx = scaled_newX,
+                                                    theta  = theta))
+
+  # mu_y = K*((K + lambda*I)^-1)y
+  (mu_y <- ym + drop(K_star%*%mat_coefs))
+
+  # As much mu_y as oos dates
+  mat_mu_y <- matrix(mu_y, nrow = p, ncol = h)
+
+  if (is.numeric(level))
+  {
+    # K** - K*((K + lambda*I)^-1)t(K*)
+    # K**
+    K_star2 <- gaussian_kxx_cpp(x = as.matrix(scaled_newX),
+                                l = l1, theta = theta)
+    Sigma2 <- K_star2 - K_star%*%(invK%*%t(K_star))
+    mat_Sigma2 <- matrix(sqrt(diag(Sigma2)), ncol = h)
+    qt <- qnorm(1 - 0.5*(100 - level)/100)
+    # upper and lower bounds for the 5 o.o.s dates
+    lower_bounds <- lapply(1:h, function(i)
+      mat_mu_y[, i] - qt*mat_Sigma2[, i])
+    upper_bounds <- lapply(1:h, function(i)
+      mat_mu_y[, i] + qt*mat_Sigma2[, i])
+
+    return(list(fcst = mat_mu_y,
+                lower_bounds = lower_bounds,
+                upper_bounds = upper_bounds))
+  } else {
+    return(mat_mu_y)
+  }
+}
+
+gp_ns_fcst_curves <- function(x, mats_vec,
+                              lags = 1,
+                              lambda_NS = 2,
+                              l1 = 5, lambda = 0.01, theta = 1.7,
+                               method = c("gaussian", "matern32", "matern52"),
+                               h = 5, level = NULL)
+{
+
+  method <- match.arg(method)
+
+  x <- as.matrix(x)
+
+  # nb of observation dates
+  n <- ncol(x)
+
+  # nb time to maturities
+  p <- nrow(x)
+
+  # total obs.
+  np <- n*p
+
+  # observation dates (beware...)
+  # time to maturities
+  stopifnot(length(mats_vec) == p)
+
+  # out-of-sample dates
+  oos_dates <- (n + 1):(n + h)
+
+  # Training sample
+  X <- NSf(lambda_NS, mats_vec)
+
+  i <- NULL
+  res_beta <- foreach::foreach(i = 1:ncol(x), .combine = cbind)%do%{
+    y <- x[, i]
+    stats::.lm.fit(x = X, y = y)$coefficients
+  }
+  rownames(res_beta) <- c("beta1", "beta2", "beta3")
+  colnames(res_beta) <- colnames(x)
+
+  fcast <- regularizedmts::krlsf(t(res_beta),
+                 lags = lags,
+                 lambda_krls = lambda,
+                 l = l1,
+                 sigma = theta,
+                 kernel_type = match.arg(method),
+                 inv_method = "ginv",
+                 h = h)
+
+  res <- X%*%t(fcast$preds)
+  rownames(res) <- mats_vec
+  colnames(res) <- paste0("h=", 1:h)
+
+ return(res)
+}

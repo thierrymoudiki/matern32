@@ -1,0 +1,50 @@
+[
+    {
+        "definitions" : [
+            {
+                "column" : 8,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 9,
+                "name" : "weighted_l2_norm(NumericVector, NumericVector)",
+                "parent_name" : "",
+                "usr" : "c:@F@weighted_l2_norm#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#S0_#"
+            },
+            {
+                "column" : 15,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 26,
+                "name" : "matern32_kxx_cpp(NumericMatrix, double, NumericVector)",
+                "parent_name" : "",
+                "usr" : "c:@F@matern32_kxx_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#d#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+            },
+            {
+                "column" : 15,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 47,
+                "name" : "matern32_kxstar_cpp(NumericMatrix, NumericMatrix, double, NumericVector)",
+                "parent_name" : "",
+                "usr" : "c:@F@matern32_kxstar_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#S0_#d#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+            }
+        ],
+        "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+        "file_last_write" : 1550677781
+    },
+    {
+        "definitions" : [
+            {
+                "column" : 6,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/rcpp_hello_world.cpp",
+                "kind" : 6,
+                "line" : 6,
+                "name" : "rcpp_hello_world",
+                "parent_name" : "",
+                "usr" : "c:@F@rcpp_hello_world#"
+            }
+        ],
+        "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/rcpp_hello_world.cpp",
+        "file_last_write" : 1550674292
+    }
+]

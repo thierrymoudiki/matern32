@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1550675184915.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "31|1|76|0|\n",
+    "hash" : "0",
+    "id" : "25322514",
+    "lastKnownWriteTime" : 1551191184,
+    "last_content_update" : 1551191184673,
+    "path" : "~/Documents/R_Packages/matern32/R/matern32.R",
+    "project_path" : "R/matern32.R",
+    "properties" : {
+        "cursorPosition" : "113,2",
+        "scrollLine" : "104",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
