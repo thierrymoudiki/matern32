@@ -5,6 +5,29 @@
 
 using namespace Rcpp;
 
+// l2_norm
+double l2_norm(NumericVector x);
+RcppExport SEXP _matern32_l2_norm(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(l2_norm(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// na_matrix
+NumericMatrix na_matrix(unsigned int n, unsigned int p);
+RcppExport SEXP _matern32_na_matrix(SEXP nSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(na_matrix(n, p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // weighted_l2_norm
 double weighted_l2_norm(NumericVector x, NumericVector l);
 RcppExport SEXP _matern32_weighted_l2_norm(SEXP xSEXP, SEXP lSEXP) {
@@ -44,6 +67,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// derivs
+List derivs(NumericMatrix x, NumericVector c, double sigma, double l);
+RcppExport SEXP _matern32_derivs(SEXP xSEXP, SEXP cSEXP, SEXP sigmaSEXP, SEXP lSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type c(cSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type l(lSEXP);
+    rcpp_result_gen = Rcpp::wrap(derivs(x, c, sigma, l));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inters
+NumericVector inters(NumericMatrix x, NumericVector c, unsigned long int i0, double sigma, double l);
+RcppExport SEXP _matern32_inters(SEXP xSEXP, SEXP cSEXP, SEXP i0SEXP, SEXP sigmaSEXP, SEXP lSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type c(cSEXP);
+    Rcpp::traits::input_parameter< unsigned long int >::type i0(i0SEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type l(lSEXP);
+    rcpp_result_gen = Rcpp::wrap(inters(x, c, i0, sigma, l));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_hello_world
 List rcpp_hello_world();
 RcppExport SEXP _matern32_rcpp_hello_world() {
@@ -56,9 +108,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_matern32_l2_norm", (DL_FUNC) &_matern32_l2_norm, 1},
+    {"_matern32_na_matrix", (DL_FUNC) &_matern32_na_matrix, 2},
     {"_matern32_weighted_l2_norm", (DL_FUNC) &_matern32_weighted_l2_norm, 2},
     {"_matern32_matern32_kxx_cpp", (DL_FUNC) &_matern32_matern32_kxx_cpp, 3},
     {"_matern32_matern32_kxstar_cpp", (DL_FUNC) &_matern32_matern32_kxstar_cpp, 4},
+    {"_matern32_derivs", (DL_FUNC) &_matern32_derivs, 4},
+    {"_matern32_inters", (DL_FUNC) &_matern32_inters, 5},
     {"_matern32_rcpp_hello_world", (DL_FUNC) &_matern32_rcpp_hello_world, 0},
     {NULL, NULL, 0}
 };

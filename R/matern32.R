@@ -5,6 +5,7 @@
 #' @param sigma 
 #' @param l 
 #' @param lambda 
+#' @param get_derivatives
 #' @param ... 
 #'
 #' @return
@@ -13,29 +14,36 @@
 #' @examples
 #' 
 #' 
-#' n <- 10 ; p <- 4
+#' n <- 10; p <- 4
 #' 
-#' 
+#' set.seed(456)
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!
 #' y <- rnorm(n)
+#' 
 #' lams <- 10^seq(-5, 4, length.out = 50)
 #' 
-#' fit_obj <- fit_matern32(x = X, y = y, lambda = lams)
-#' 
+#' # use matern32::find_params_matern32 to find sigma and l
+#' fit_obj <- matern32::fit_matern32(x = X, y = y, lambda = lams)
+#'
+#' par(mfrow=c(1, 2))
+#'  
 #' plot(log(lams), fit_obj$GCV, type = 'l', main = "GCV", 
 #' ylab = "GCV")
 #' 
 #' matplot(log(lams), t(fit_obj$coef), type = 'l', 
-#' main = "coefficients = f(lambda)", xlab = "log(lambda)", ylab = "coefs")
+#' main = "coefficients = f(lambda)", xlab = "log(lambda)", 
+#' ylab = "coefs")
 #' abline(h = 0, lty = 2, lwd = 2, col = "red")
 #' 
 #' 
-fit_matern32 <- function(x, y, sigma = 2, l = 0.1, ...)
+fit_matern32 <- function(x, y, sigma = 2, l = 0.1, 
+                         lambda = 10^seq(-5, 4, length.out = 100),
+                         get_derivatives = TRUE,
+                         ...)
 {
   ## regression ----
   x <- as.matrix(x)
   y <- as.vector(y)
-  lambda = 10^seq(-5, 4, length.out = 100)
   nlambda <- length(lambda)
   n <- dim(x)[1]
   p <- dim(x)[2]
@@ -64,19 +72,26 @@ fit_matern32 <- function(x, y, sigma = 2, l = 0.1, ...)
   a <- drop(d * rhs) / div
   dim(a) <- c(nb_di, nlambda)
   coef <- crossprod(Xs$vt, a)
+  colnames(coef) <- lambda
   
   centered_y_hat <- K %*% coef
   fitted_values <- drop(ym +  centered_y_hat)
   resid <- centered_y - centered_y_hat
+  colnames(resid) <- lambda
   GCV <- colSums(resid^2)/(nrow(X) - colSums(matrix(d^2/div, 
                                                     nb_di)))^2
+  
+  if (get_derivatives)
+  {
+    
+  }
   
   return(list(K = K, sigma = sigma, l = l, 
               coef = drop(coef), scales = x_scaled$xsd,
               ym = ym, xm = x_scaled$xm,
               fitted_values = fitted_values, resid = resid,
               GCV = GCV, scaled_x = X, centered_y = centered_y))
-    
+  
 }
 
 
@@ -91,19 +106,25 @@ fit_matern32 <- function(x, y, sigma = 2, l = 0.1, ...)
 #'
 #' @examples
 #' 
-#'
+#' 
 #' n <- 10 ; p <- 4
 #' 
+#' set.seed(456)
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!
 #' y <- rnorm(n)
 #' 
 #' lams <- 10^seq(-5, 4, length.out = 50)
-#' fit_obj <- fit_matern32(x = X, y = y, lambda = lams)
+#' 
+#' # use matern32::find_params_matern32 to find sigma and l
+#' fit_obj <- fit_matern32(x = X, y = y, lambda = lams, 
+#' sigma = 8577.1115, l = 505.0929)
 #' 
 #' df <- data.frame(predict_matern32(fit_obj, newx = X) - y)
+#' colnames(df) <- paste0(round(lams, 2))
 #' summary(df)
 #' boxplot(df[, c(1, 10, 25, 35, 50)], 
-#' main = "distribution of bias")
+#' main = "distribution of bias", 
+#' xlab = "lambda", ylab = "y_hat - y")
 #' 
 #' 
 predict_matern32 <- function(fit_obj, newx, ci = NULL)
@@ -134,6 +155,17 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
 #' @export
 #'
 #' @examples
+#' 
+#' 
+#' n <- 10; p <- 4
+#' 
+#' set.seed(456)
+#' X <- matrix(rnorm(n * p), n, p) # no intercept!
+#' y <- rnorm(n)
+#' 
+#' matern32::find_params_matern32(X, y)
+#' 
+#' 
 find_params_matern32 <- function(x, y, cl = NULL, ...)
 {
   
@@ -149,7 +181,7 @@ find_params_matern32 <- function(x, y, cl = NULL, ...)
   
   lower_bound <- 10^c(-5, -5)
   upper_bound <- 10^c(4, 4)
-  nb_iter <- 100
+  nb_iter <- 125
   
   if (is.null(cl))
   {
@@ -161,9 +193,9 @@ find_params_matern32 <- function(x, y, cl = NULL, ...)
       
       set.seed(i*100)
       
-      res <- stats::nlminb(start = runif(n = 2, min = lower_bound, 
+      res <- suppressWarnings(stats::nlminb(start = runif(n = 2, min = lower_bound, 
                                          max = upper_bound), objective = OF, 
-                           lower = lower_bound, upper = upper_bound, ...)
+                              lower = lower_bound, upper = upper_bound, ...))
       
       setTxtProgressBar(pb, i)
       
@@ -171,7 +203,7 @@ find_params_matern32 <- function(x, y, cl = NULL, ...)
     }
     close(pb)
     
-  } else {
+  } else { # parallel processing
     
     `%op%` <- foreach::`%dopar%`
     
@@ -192,9 +224,10 @@ find_params_matern32 <- function(x, y, cl = NULL, ...)
                               
                               set.seed(i*100)
                               
-                              stats::nlminb(start = runif(n = 2, min = lower_bound, 
-                                                          max = upper_bound), objective = OF, 
-                                            lower = lower_bound, upper = upper_bound, ...)
+                              suppressWarnings(stats::nlminb(start = runif(n = 2, min = lower_bound, 
+                                                             max = upper_bound), 
+                                            objective = OF, lower = lower_bound, 
+                                            upper = upper_bound, ...))
                               
                             }
     
@@ -205,6 +238,9 @@ find_params_matern32 <- function(x, y, cl = NULL, ...)
                                 function (i)
                                   out[[i]]$objective))
   
-  return(out[[index_opt]])
+  ans <- out[[index_opt]]
+  names(ans$par) <- c("sigma", "l")
+  
+  return(ans)
   
 }
