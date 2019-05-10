@@ -2,11 +2,27 @@ summary.matern32 <- function(fit_obj, obs = NULL)
 {
   n <- nrow(fit_obj$scaled_x)
   p <- ncol(fit_obj$scaled_x)
-  index_lam <- which.min(fit_obj$GCV)
-  R_Squared <- fit_obj$R_Squared[index_lam]
-  residuals <- fit_obj$resid[ , index_lam]
-  summary_resid <- matrix(summary(residuals), nrow = 1)
-  colnames(summary_resid) <- c("Min.", "1st Qu.",  "Median", "Mean", "3rd Qu.", "Max.")
+  index_lam <- NULL
+  
+  if (!is.null(fit_obj$GCV))
+    index_lam <- which.min(fit_obj$GCV)
+  
+  if (!is.null(index_lam)) # multiple lambdas 
+  {
+    R_Squared <- fit_obj$R_Squared[index_lam]
+    residuals <- fit_obj$resid[ , index_lam]
+    summary_resid <- matrix(summary(residuals), nrow = 1)
+    colnames(summary_resid) <- c("Min.", "1st Qu.",  "Median", "Mean", "3rd Qu.", "Max.")
+    
+  } else { # one lambda
+    
+    R_Squared <- fit_obj$R_Squared
+    residuals <- fit_obj$resid
+    summary_resid <- matrix(summary(residuals), nrow = 1)
+    colnames(summary_resid) <- c("Min.", "1st Qu.",  "Median", "Mean", "3rd Qu.", "Max.")
+    
+  }
+  
 
     if (is.null(obs))
     {
