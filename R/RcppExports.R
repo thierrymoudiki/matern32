@@ -13,20 +13,20 @@ weighted_l2_norm <- function(x, l) {
     .Call('_matern32_weighted_l2_norm', PACKAGE = 'matern32', x, l)
 }
 
-matern32_kxx_cpp <- function(x, sigma, l) {
-    .Call('_matern32_matern32_kxx_cpp', PACKAGE = 'matern32', x, sigma, l)
+matern32_kxx_cpp <- function(x, l) {
+    .Call('_matern32_matern32_kxx_cpp', PACKAGE = 'matern32', x, l)
 }
 
-matern32_kxstar_cpp <- function(newx, x, sigma, l) {
-    .Call('_matern32_matern32_kxstar_cpp', PACKAGE = 'matern32', newx, x, sigma, l)
+matern32_kxstar_cpp <- function(newx, x, l) {
+    .Call('_matern32_matern32_kxstar_cpp', PACKAGE = 'matern32', newx, x, l)
 }
 
-derivs <- function(x, c, sigma, l) {
-    .Call('_matern32_derivs', PACKAGE = 'matern32', x, c, sigma, l)
+derivs <- function(x, c, l) {
+    .Call('_matern32_derivs', PACKAGE = 'matern32', x, c, l)
 }
 
-inters <- function(x, c, i0, sigma, l) {
-    .Call('_matern32_inters', PACKAGE = 'matern32', x, c, i0, sigma, l)
+inters <- function(x, c, i0, l) {
+    .Call('_matern32_inters', PACKAGE = 'matern32', x, c, i0, l)
 }
 
 rcpp_hello_world <- function() {

@@ -6,6 +6,24 @@
                 "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
                 "kind" : 6,
                 "line" : 9,
+                "name" : "l2_norm(NumericVector)",
+                "parent_name" : "",
+                "usr" : "c:@F@l2_norm#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+            },
+            {
+                "column" : 15,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 22,
+                "name" : "na_matrix(unsigned int, unsigned int)",
+                "parent_name" : "",
+                "usr" : "c:@F@na_matrix#i#i#"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 29,
                 "name" : "weighted_l2_norm(NumericVector, NumericVector)",
                 "parent_name" : "",
                 "usr" : "c:@F@weighted_l2_norm#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#S0_#"
@@ -14,23 +32,41 @@
                 "column" : 15,
                 "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
                 "kind" : 6,
-                "line" : 26,
-                "name" : "matern32_kxx_cpp(NumericMatrix, double, NumericVector)",
+                "line" : 46,
+                "name" : "matern32_kxx_cpp(NumericMatrix, NumericVector)",
                 "parent_name" : "",
-                "usr" : "c:@F@matern32_kxx_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#d#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+                "usr" : "c:@F@matern32_kxx_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
             },
             {
                 "column" : 15,
                 "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
                 "kind" : 6,
-                "line" : 47,
-                "name" : "matern32_kxstar_cpp(NumericMatrix, NumericMatrix, double, NumericVector)",
+                "line" : 67,
+                "name" : "matern32_kxstar_cpp(NumericMatrix, NumericMatrix, NumericVector)",
                 "parent_name" : "",
-                "usr" : "c:@F@matern32_kxstar_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#S0_#d#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+                "usr" : "c:@F@matern32_kxstar_cpp#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#S0_#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#"
+            },
+            {
+                "column" : 6,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 88,
+                "name" : "derivs(NumericMatrix, NumericVector, double)",
+                "parent_name" : "",
+                "usr" : "c:@F@derivs#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#d#"
+            },
+            {
+                "column" : 15,
+                "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
+                "kind" : 6,
+                "line" : 128,
+                "name" : "inters(NumericMatrix, NumericVector, unsigned long, double)",
+                "parent_name" : "",
+                "usr" : "c:@F@inters#$@N@Rcpp@C@Matrix>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#$@N@Rcpp@C@Vector>#VI14#@N@Rcpp@CT>1#T@PreserveStorage#l#d#"
             }
         ],
         "file" : "/Users/moudiki/Documents/R_Packages/matern32/src/matern32.cpp",
-        "file_last_write" : 1550677781
+        "file_last_write" : 1557151936
     },
     {
         "definitions" : [

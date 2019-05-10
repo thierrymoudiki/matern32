@@ -9,11 +9,12 @@ using namespace Rcpp;
 double l2_norm(NumericVector x)
 {
   unsigned long int n = x.size();
-  
   double res = 0;
+  
   for(int i = 0; i < n; i++) {
     res += pow(x(i), 2);
   }
+  
   return(sqrt(res));
 }
 
@@ -42,7 +43,7 @@ double weighted_l2_norm(NumericVector x, NumericVector l)
 /* 1 - Matérn 3/2 kernel */
 
 // [[Rcpp::export]]
-NumericMatrix matern32_kxx_cpp(NumericMatrix x, double sigma, 
+NumericMatrix matern32_kxx_cpp(NumericMatrix x, 
                                NumericVector l)
 {
   unsigned long int n = x.nrow();
@@ -58,13 +59,14 @@ NumericMatrix matern32_kxx_cpp(NumericMatrix x, double sigma,
     }
   }
   
-  return(pow(sigma, 2)*res);
+  return(res);
 }
 
 
 // [[Rcpp::export]]
-NumericMatrix matern32_kxstar_cpp(NumericMatrix newx, NumericMatrix x,
-                                  double sigma, NumericVector l)
+NumericMatrix matern32_kxstar_cpp(NumericMatrix newx, 
+                                  NumericMatrix x,
+                                  NumericVector l)
 {
   unsigned long int m = newx.nrow();
   unsigned long int n = x.nrow();
@@ -79,13 +81,13 @@ NumericMatrix matern32_kxstar_cpp(NumericMatrix newx, NumericMatrix x,
     }
   }
   
-  return(pow(sigma, 2)*res);
+  return(res);
 }
 
 // [[Rcpp::export]]
-List derivs(NumericMatrix x, 
-            NumericVector c, 
-            double sigma, double l)
+List derivs(NumericMatrix x, // matrix of inputs
+            NumericVector c, // coefficients (y = K*c)
+            double l)
 {
   
   unsigned long int n = x.nrow();
@@ -95,27 +97,30 @@ List derivs(NumericMatrix x,
     ::Rf_error("you must have c.size() == x.nrow()");
   }
   
-  double r;
-  double n2 = pow(n, 2);
+  double r = 0;
   NumericVector vec(n);
-  NumericMatrix res = na_matrix(n2, p);
-  NumericMatrix res2 = na_matrix(n2, p);
+  double n2 = pow(n, 2);
   double temp = sqrt(3)/l;
+  double const_mult = pow(temp, 2);
+  NumericMatrix deriv1 = na_matrix(n2, p);
+  NumericMatrix deriv2 = na_matrix(n2, p);
   double temp2 = 0;
-  double const_mult = pow(sigma, 2)*pow(temp, 2);
+  unsigned long int i = 0;
   
   for(unsigned long int i0 = 0; i0 < n; i0++){
-    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here
+    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
       vec = x(i0, _) - x(k, _);
       r = l2_norm(vec);
       temp2 = c(k)*exp(-temp*r); // temp = sqrt(3)/l;
-      res(i0*k, _) = temp2*vec; // first derivative
-      res2(i0*k, _) = temp2*((temp/r)*pow(vec, 2) - 1); // temp = sqrt(3)/l; // second derivative
+      deriv1(i, _) = temp2*vec; // first derivative
+      //Rcout << "The value of deriv1(i, _): " << deriv1(i, 0) << std::endl;
+      deriv2(i, _) = temp2*((temp/r)*pow(vec, 2) - 1); // second derivative
+      i++;
     }
   }
   
-  return List::create(Rcpp::Named("deriv1") = const_mult*res,
-                      Rcpp::Named("deriv2") = const_mult*res2);
+  return List::create(Rcpp::Named("deriv1") = const_mult*deriv1,
+                      Rcpp::Named("deriv2") = const_mult*deriv2);
 }
 
 
@@ -123,7 +128,7 @@ List derivs(NumericMatrix x,
 NumericVector inters(NumericMatrix x, 
                      NumericVector c, 
                      unsigned long int i0, 
-                     double sigma, double l)
+                     double l)
 {
   
   unsigned long int n = x.nrow();
@@ -142,14 +147,11 @@ NumericVector inters(NumericMatrix x,
   NumericMatrix res(n, p), res2(n, p);
   double temp = sqrt(3)/l;
   double temp2 = 0;
-  double const_mult = pow(sigma, 2)*pow(temp, 2);
+  double const_mult = pow(temp, 3);
   
-  for(unsigned long int k = 0; k < n; k++){
-    vec = x(i0, _) - x(k, _);
-    r = l2_norm(vec);
-    temp2 = c(k)*exp(-temp*r);
-    res2(k, _) = temp2*((temp/r)*pow(vec, 2) - 1); // second derivative
-  }
+  // TODO
+  // TODO
+  // TODO
   
   return (const_mult*res2);
 }
@@ -164,5 +166,5 @@ n <- 7 ; p <- 2
 X <- matrix(rnorm(n * p), n, p) # no intercept!
 y <- rnorm(n)
 
-matern32_kxx_cpp(X, sigma = 0.1, l = rep(0.1, p))
+matern32_kxx_cpp(X, l = rep(0.1, p))
 */
