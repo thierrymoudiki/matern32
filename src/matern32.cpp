@@ -224,19 +224,3 @@ List solve_eigen(NumericMatrix Eigenvectors,
   return List::create(Rcpp::Named("loocv") = loocv,
                       Rcpp::Named("coeffs") = coeffs);
 }
-
-// You can include R code blocks in C++ files processed with sourceCpp
-// (useful for testing and development). The R code will be automatically 
-// run after the compilation.
-//
-
-/*** R
-n <- 7 ; p <- 2
-X <- matrix(rnorm(n * p), n, p) # no intercept!
-y <- rnorm(n)
-
-matern32_kxx_cpp(X, l = rep(0.1, p))
-
-print(X)
-print(transpose(X))
-*/

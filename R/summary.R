@@ -1,3 +1,12 @@
+#' Title
+#'
+#' @param fit_obj 
+#' @param obs 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 summary.matern32 <- function(fit_obj, obs = NULL)
 {
   n <- nrow(fit_obj$scaled_x)

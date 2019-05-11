@@ -153,7 +153,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     eigen_values <- eigenK$values
     Q <- eigenK$vectors # - check crossprod(Q)
                         # - check Q%*%diag(eigenK$values)%*%t(Q) == K
-    N_Q <- length(Q) # number of eigen values
     
     inv_eigen <- solve_eigen(Eigenvectors = Q,
                 Eigenvalues = eigen_values,
@@ -217,11 +216,9 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
   if (is.vector(newx))
     newx <- t(newx)
   
-  scaled_newx <- matern32::my_scale(x = newx,
-                                    xm = as.vector(fit_obj$xm),
-                                    xsd = as.vector(fit_obj$scales))
-  
-  K_star <- matern32_kxstar_cpp(newx = scaled_newx, 
+  K_star <- matern32_kxstar_cpp(newx = matern32::my_scale(x = newx,
+                                                          xm = as.vector(fit_obj$xm),
+                                                          xsd = as.vector(fit_obj$scales)), 
                                 x = fit_obj$scaled_x, 
                                 l = fit_obj$l)
   
