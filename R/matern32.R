@@ -125,6 +125,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   if (method == "chol")
   {
     stopifnot(length(lambda) <= 1)
+    # or if length > 1, calculate loocvs for each
     K_plus <- K + lambda*diag(n)
     invK <- chol2inv(chol(K_plus))
     coef <- invK%*%centered_y
@@ -147,14 +148,35 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   
   if (method == "eigen")
   {
+    stopifnot(length(lambda) <= 1)
     eigenK <- base::eigen(K)
     eigen_values <- eigenK$values
     Q <- eigenK$vectors # - check crossprod(Q)
                         # - check Q%*%diag(eigenK$values)%*%t(Q) == K
     N_Q <- length(Q) # number of eigen values
-    Ginv <- 0
-    coef <- Ginv%*%centered_y
-    looe <- coef/0
+    
+    inv_eigen <- solve_eigen(Eigenvectors = Q,
+                Eigenvalues = eigen_values,
+                y = centered_y,
+                lambda = lambda)
+    
+    coef <- inv_eigen$coeffs
+    looe <- inv_eigen$loocv
+    
+    centered_y_hat <- K %*% coef
+    fitted_values <- drop(ym +  centered_y_hat)
+    resid <- centered_y - centered_y_hat
+    
+    RSS <- sum((y - fitted_values)^2)
+    TSS <- sum((y - ym)^2)
+    R_Squared <- 1 - RSS/TSS
+    
+    return(list(K = K, l = l, 
+                coef = drop(coef), scales = x_scaled$xsd,
+                ym = ym, xm = x_scaled$xm,
+                fitted_values = fitted_values, resid = drop(resid),
+                looCV = looe, R_Squared = R_Squared, 
+                scaled_x = X, centered_y = centered_y)) 
   }
 }
 

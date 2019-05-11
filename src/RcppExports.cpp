@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// crossprod_cpp
+double crossprod_cpp(NumericVector x, NumericVector y);
+RcppExport SEXP _matern32_crossprod_cpp(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(crossprod_cpp(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // l2_norm
 double l2_norm(NumericVector x);
 RcppExport SEXP _matern32_l2_norm(SEXP xSEXP) {
@@ -37,6 +49,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type l(lSEXP);
     rcpp_result_gen = Rcpp::wrap(weighted_l2_norm(x, l));
+    return rcpp_result_gen;
+END_RCPP
+}
+// transpose
+NumericMatrix transpose(NumericMatrix x);
+RcppExport SEXP _matern32_transpose(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(transpose(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -92,6 +115,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// solve_eigen
+List solve_eigen(NumericMatrix Eigenvectors, const NumericVector Eigenvalues, const NumericVector y, const double lambda);
+RcppExport SEXP _matern32_solve_eigen(SEXP EigenvectorsSEXP, SEXP EigenvaluesSEXP, SEXP ySEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Eigenvectors(EigenvectorsSEXP);
+    Rcpp::traits::input_parameter< const NumericVector >::type Eigenvalues(EigenvaluesSEXP);
+    Rcpp::traits::input_parameter< const NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_eigen(Eigenvectors, Eigenvalues, y, lambda));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_hello_world
 List rcpp_hello_world();
 RcppExport SEXP _matern32_rcpp_hello_world() {
@@ -104,13 +141,16 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_matern32_crossprod_cpp", (DL_FUNC) &_matern32_crossprod_cpp, 2},
     {"_matern32_l2_norm", (DL_FUNC) &_matern32_l2_norm, 1},
     {"_matern32_na_matrix", (DL_FUNC) &_matern32_na_matrix, 2},
     {"_matern32_weighted_l2_norm", (DL_FUNC) &_matern32_weighted_l2_norm, 2},
+    {"_matern32_transpose", (DL_FUNC) &_matern32_transpose, 1},
     {"_matern32_matern32_kxx_cpp", (DL_FUNC) &_matern32_matern32_kxx_cpp, 2},
     {"_matern32_matern32_kxstar_cpp", (DL_FUNC) &_matern32_matern32_kxstar_cpp, 3},
     {"_matern32_derivs", (DL_FUNC) &_matern32_derivs, 3},
     {"_matern32_inters", (DL_FUNC) &_matern32_inters, 4},
+    {"_matern32_solve_eigen", (DL_FUNC) &_matern32_solve_eigen, 4},
     {"_matern32_rcpp_hello_world", (DL_FUNC) &_matern32_rcpp_hello_world, 0},
     {NULL, NULL, 0}
 };

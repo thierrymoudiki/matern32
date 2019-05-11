@@ -6,6 +6,23 @@ using namespace Rcpp;
 /* 0 - utils */
 
 // [[Rcpp::export]]
+double crossprod_cpp(NumericVector x, NumericVector y)
+{
+  unsigned long int n = x.size();
+  if (y.size() != n) {
+    ::Rf_error("you must have x.size() == y.size()");
+  }
+  
+  double res = 0;
+  
+  for(int i = 0; i < n; i++) {
+    res += x(i)*y(i);
+  }
+  
+  return(res);
+}
+
+// [[Rcpp::export]]
 double l2_norm(NumericVector x)
 {
   unsigned long int n = x.size();
@@ -37,6 +54,22 @@ double weighted_l2_norm(NumericVector x, NumericVector l)
     res += pow(x(i), 2)/pow(l(i), 2);
   }
   return(sqrt(res));
+}
+
+// [[Rcpp::export]]
+NumericMatrix transpose(NumericMatrix x)
+{
+  unsigned long int n = x.nrow();
+  unsigned long int p = x.ncol();
+  NumericMatrix res(p, n);
+  
+  for(int i = 0; i < n; i++) {
+    for(int j = 0; j < p; j++) {
+      res(j, i) = x(i, j);
+    }
+  }
+  
+  return(res);
 }
 
 
@@ -124,36 +157,72 @@ List derivs(NumericMatrix x, // matrix of inputs
 }
 
 
-// [[Rcpp::export]]
-NumericVector inters(NumericMatrix x, 
-                     NumericVector c, 
-                     unsigned long int i0, 
+//[[Rcpp::export]]
+NumericVector inters(NumericMatrix x,
+                     NumericVector c,
+                     unsigned long int i0,
                      double l)
 {
-  
+
   unsigned long int n = x.nrow();
   unsigned long int p = x.ncol();
-  
+
   if (c.size() != n) {
     ::Rf_error("you must have c.size() == x.nrow()");
   }
-  
+
   if (i0 >= n) {
     ::Rf_error("you must have i0 < n");
   }
-  
-  double r;
+
+  //double r = 0;
   NumericVector vec(n);
   NumericMatrix res(n, p), res2(n, p);
   double temp = sqrt(3)/l;
-  double temp2 = 0;
+  //double temp2 = 0;
   double const_mult = pow(temp, 3);
-  
+
   // TODO
   // TODO
   // TODO
-  
+
   return (const_mult*res2);
+}
+
+//[[Rcpp::export]]
+List solve_eigen(NumericMatrix Eigenvectors,
+                    const NumericVector Eigenvalues,
+                    const NumericVector y,
+                    const double lambda){
+
+  unsigned long int N = Eigenvectors.nrow(); //Number observations
+  unsigned long int K = Eigenvectors.ncol(); //Number of eigen vectors 
+  if (Eigenvalues.size() != K) {
+    ::Rf_error("you must have Eigenvalues.size() == Eigenvectors.ncol()");
+  }
+  
+  // K at most N. Typically smaller (based on user eigentruncation input)
+  NumericVector loocv(N); // leave one out error loss
+  // coefficients
+  NumericVector coeffs(N);
+  //Ginv_diag
+  NumericVector Ginv_diag(N);
+  // temporary line
+  NumericVector temp(N);
+
+    for(unsigned long int i = 0; i < N; ++i){
+      for(unsigned long int j = 0; j < N; ++j){
+        temp(j) = sum(Eigenvectors(i, _)*Eigenvectors(j, _)/(lambda + Eigenvalues));
+        if (i == j){
+          Ginv_diag(j) = temp[j];
+        }
+      }
+      coeffs(i) = crossprod_cpp(temp, y);
+      loocv(i) = coeffs(i)/Ginv_diag(i);
+    }
+  
+  return List::create(Rcpp::Named("loocv") = loocv,
+                      Rcpp::Named("coeffs") = coeffs);
 }
 
 // You can include R code blocks in C++ files processed with sourceCpp
@@ -167,4 +236,7 @@ X <- matrix(rnorm(n * p), n, p) # no intercept!
 y <- rnorm(n)
 
 matern32_kxx_cpp(X, l = rep(0.1, p))
+
+print(X)
+print(transpose(X))
 */
