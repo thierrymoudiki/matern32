@@ -33,12 +33,16 @@ derivs <- function(x, c, l) {
     .Call('_matern32_derivs', PACKAGE = 'matern32', x, c, l)
 }
 
-inters <- function(x, c, i0, l) {
-    .Call('_matern32_inters', PACKAGE = 'matern32', x, c, i0, l)
+derivs_inters <- function(x, j1, j2, c, l) {
+    .Call('_matern32_derivs_inters', PACKAGE = 'matern32', x, j1, j2, c, l)
 }
 
 solve_eigen <- function(Eigenvectors, Eigenvalues, y, lambda) {
     .Call('_matern32_solve_eigen', PACKAGE = 'matern32', Eigenvectors, Eigenvalues, y, lambda)
+}
+
+find_lam_eigen <- function(Eigenvectors, Eigenvalues, y, lambda_vector) {
+    .Call('_matern32_find_lam_eigen', PACKAGE = 'matern32', Eigenvectors, Eigenvalues, y, lambda_vector)
 }
 
 rcpp_hello_world <- function() {

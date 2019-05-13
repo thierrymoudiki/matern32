@@ -13,7 +13,6 @@
 #'
 #' @examples
 #' 
-#' 
 #' n <- 10; p <- 4
 #' 
 #' set.seed(456)
@@ -125,7 +124,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   if (method == "chol")
   {
     stopifnot(length(lambda) <= 1)
-    # or if length > 1, calculate loocvs for each
     K_plus <- K + lambda*diag(n)
     invK <- chol2inv(chol(K_plus))
     coef <- invK%*%centered_y
@@ -137,9 +135,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     stopifnot(length(lambda) <= 1)
     eigenK <- base::eigen(K)
     eigen_values <- eigenK$values
-    Q <- eigenK$vectors # - check crossprod(Q)
-                        # - check Q%*%diag(eigenK$values)%*%t(Q) == K
-    
+    Q <- eigenK$vectors 
     inv_eigen <- solve_eigen(Eigenvectors = Q,
                 Eigenvalues = eigen_values,
                 y = centered_y,
@@ -198,7 +194,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
 #' boxplot(df[, c(1, 10, 25, 35, 50)], 
 #' main = "distribution of bias", 
 #' xlab = "lambda", ylab = "y_hat - y")
-#' 
 #' 
 predict_matern32 <- function(fit_obj, newx, ci = NULL)
 {

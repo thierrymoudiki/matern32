@@ -36,7 +36,8 @@ double l2_norm(NumericVector x)
 }
 
 // [[Rcpp::export]]
-NumericMatrix na_matrix(unsigned int n, unsigned int p){
+NumericMatrix na_matrix(unsigned int n, unsigned int p)
+{
   NumericMatrix m(n,p) ;
   std::fill( m.begin(), m.end(), NumericVector::get_na() ) ;
   return m ;
@@ -95,7 +96,6 @@ NumericMatrix matern32_kxx_cpp(NumericMatrix x,
   return(res);
 }
 
-
 // [[Rcpp::export]]
 NumericMatrix matern32_kxstar_cpp(NumericMatrix newx, 
                                   NumericMatrix x,
@@ -120,7 +120,7 @@ NumericMatrix matern32_kxstar_cpp(NumericMatrix newx,
 // [[Rcpp::export]]
 List derivs(NumericMatrix x, // matrix of inputs
             NumericVector c, // coefficients (y = K*c)
-            double l)
+            double l) //lengthscale parameter 
 {
   
   unsigned long int n = x.nrow();
@@ -156,12 +156,12 @@ List derivs(NumericMatrix x, // matrix of inputs
                       Rcpp::Named("deriv2") = const_mult*deriv2);
 }
 
-
 //[[Rcpp::export]]
-NumericVector inters(NumericMatrix x,
-                     NumericVector c,
-                     unsigned long int i0,
-                     double l)
+NumericVector derivs_inters(NumericMatrix x, // matrix of inputs
+                     unsigned long int j1, // index of first column
+                     unsigned long int j2, // index of second column
+                     NumericVector c, // coefficients (y = K*c)
+                     double l) //lengthscale parameter 
 {
 
   unsigned long int n = x.nrow();
@@ -170,30 +170,40 @@ NumericVector inters(NumericMatrix x,
   if (c.size() != n) {
     ::Rf_error("you must have c.size() == x.nrow()");
   }
+  
+  j1 = j1 - 1; //!!! beware of R indices starting at 0
+  j2 = j2 - 1; //!!! beware of R indices starting at 0
 
-  if (i0 >= n) {
-    ::Rf_error("you must have i0 < n");
+  if (j1 >= p || j2 >= p) {
+    ::Rf_error("you must have j1 < p and j2 < p"); //!!! beware of R indices starting at 0 
   }
 
-  //double r = 0;
-  NumericVector vec(n);
-  NumericMatrix res(n, p), res2(n, p);
+  double r = 0;
+  double n2 = pow(n, 2);
   double temp = sqrt(3)/l;
-  //double temp2 = 0;
+  double temp2 = 0;
   double const_mult = pow(temp, 3);
+  NumericVector deriv_inter(n2);
+  unsigned long int i = 0;
 
-  // TODO
-  // TODO
-  // TODO
-
-  return (const_mult*res2);
+  for(unsigned long int i0 = 0; i0 < n; i0++){
+    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
+      temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
+      r = l2_norm(x(i0, _) - x(k, _));
+      deriv_inter(i) = (c(k)/r)*exp(-temp*r)*temp2; // first derivative
+      i++;
+    }
+  }
+  
+  return (const_mult*deriv_inter);
 }
 
 //[[Rcpp::export]]
 List solve_eigen(NumericMatrix Eigenvectors,
                     const NumericVector Eigenvalues,
                     const NumericVector y,
-                    const double lambda){
+                    const double lambda)
+{
 
   unsigned long int N = Eigenvectors.nrow(); //Number observations
   unsigned long int K = Eigenvectors.ncol(); //Number of eigen vectors 
@@ -223,4 +233,51 @@ List solve_eigen(NumericMatrix Eigenvectors,
   
   return List::create(Rcpp::Named("loocv") = loocv,
                       Rcpp::Named("coeffs") = coeffs);
+}
+
+//[[Rcpp::export]]
+double find_lam_eigen(NumericMatrix Eigenvectors,
+                 const NumericVector Eigenvalues,
+                 const NumericVector y,
+                 NumericVector lambda_vector)
+{
+  
+  unsigned long int N = Eigenvectors.nrow(); //Number observations
+  unsigned long int K = Eigenvectors.ncol(); //Number of eigen vectors 
+  if (Eigenvalues.size() != K) {
+    ::Rf_error("you must have Eigenvalues.size() == Eigenvectors.ncol()");
+  }
+  
+  // K at most N. Typically smaller (based on user eigentruncation input)
+  NumericVector loocv(N); // leave one out error loss
+  // coefficients
+  NumericVector coeffs(N);
+  //Ginv_diag
+  NumericVector Ginv_diag(N);
+  // temporary line
+  NumericVector temp(N);
+  // loocv error
+  double rmse_loocv = 0;
+  double rmse_loocv_prev = 1000000;
+  //optimal index;
+  unsigned long int i_opt;
+  // number of lambdas
+  unsigned long int n_lambdas = lambda_vector.size();
+  
+    for(unsigned long int i = 0; i < n_lambdas; ++i)
+    {
+      loocv = solve_eigen(Eigenvectors, Eigenvalues,
+                          y, lambda_vector(i))(1);
+      
+      rmse_loocv = sqrt(sum(pow(loocv, 2)));
+      
+        if (rmse_loocv <= rmse_loocv_prev)
+        {
+          i_opt = i;
+        }
+        
+      rmse_loocv_prev = rmse_loocv;
+    }
+  
+  return (lambda_vector(i_opt));
 }
