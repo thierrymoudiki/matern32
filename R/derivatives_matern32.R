@@ -39,3 +39,30 @@ derivs_matern32 <- function(fit_obj)
   
   return(res)
 }
+
+
+#' Title
+#'
+#' @param fit_obj 
+#' @param index_col1 
+#' @param index_col2 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+inters_matern32 <- function(fit_obj, index_col1, index_col2)
+{
+  n <- nrow(fit_obj$scaled_x)
+  p <- ncol(fit_obj$scaled_x)
+  l <- sqrt(p)
+  
+  res_inters <- inters(x = fit_obj$scaled_x, 
+                       j1 = index_col1, j2 = index_col2, 
+                       c = fit_obj$coef, l = l)
+  
+  res <- apply(res_inters, 1, summary)[-7,]
+  colnames(res) <- paste0("obs", 1:n) 
+  
+  return(res)
+}
