@@ -64,5 +64,11 @@ inters_matern32 <- function(fit_obj, index_col1, index_col2)
   res <- apply(res_inters, 1, summary)[-7,]
   colnames(res) <- paste0("obs", 1:n) 
   
+  if (!is.null(colnames(fit_obj$scaled_x)))
+  {
+    col_names <- colnames(fit_obj$scaled_x)
+    cat("Interaction effects between", col_names[index_col1]," and ", col_names[index_col2], ":\n") 
+  }
+  
   return(res)
 }
