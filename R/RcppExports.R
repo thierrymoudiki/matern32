@@ -17,10 +17,6 @@ weighted_l2_norm <- function(x, l) {
     .Call('_matern32_weighted_l2_norm', PACKAGE = 'matern32', x, l)
 }
 
-transpose <- function(x) {
-    .Call('_matern32_transpose', PACKAGE = 'matern32', x)
-}
-
 matern32_kxx_cpp <- function(x, l) {
     .Call('_matern32_matern32_kxx_cpp', PACKAGE = 'matern32', x, l)
 }
@@ -33,8 +29,8 @@ derivs <- function(x, c, l) {
     .Call('_matern32_derivs', PACKAGE = 'matern32', x, c, l)
 }
 
-derivs_inters <- function(x, j1, j2, c, l) {
-    .Call('_matern32_derivs_inters', PACKAGE = 'matern32', x, j1, j2, c, l)
+inters <- function(x, j1, j2, c, l) {
+    .Call('_matern32_inters', PACKAGE = 'matern32', x, j1, j2, c, l)
 }
 
 solve_eigen <- function(Eigenvectors, Eigenvalues, y, lambda) {

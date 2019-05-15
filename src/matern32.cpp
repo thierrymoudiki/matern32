@@ -57,22 +57,6 @@ double weighted_l2_norm(NumericVector x, NumericVector l)
   return(sqrt(res));
 }
 
-// [[Rcpp::export]]
-NumericMatrix transpose(NumericMatrix x)
-{
-  unsigned long int n = x.nrow();
-  unsigned long int p = x.ncol();
-  NumericMatrix res(p, n);
-  
-  for(int i = 0; i < n; i++) {
-    for(int j = 0; j < p; j++) {
-      res(j, i) = x(i, j);
-    }
-  }
-  
-  return(res);
-}
-
 
 /* 1 - Matérn 3/2 kernel */
 
@@ -157,45 +141,45 @@ List derivs(NumericMatrix x, // matrix of inputs
 }
 
 //[[Rcpp::export]]
-NumericVector derivs_inters(NumericMatrix x, // matrix of inputs
+NumericVector inters(NumericMatrix x, // matrix of covariates
                      unsigned long int j1, // index of first column
                      unsigned long int j2, // index of second column
-                     NumericVector c, // coefficients (y = K*c)
+                     NumericVector c, // coefficients (so that y = K*c)
                      double l) //lengthscale parameter 
 {
 
   unsigned long int n = x.nrow();
   unsigned long int p = x.ncol();
-
-  if (c.size() != n) {
-    ::Rf_error("you must have c.size() == x.nrow()");
-  }
-  
   j1 = j1 - 1; //!!! beware of R indices starting at 0
   j2 = j2 - 1; //!!! beware of R indices starting at 0
-
-  if (j1 >= p || j2 >= p) {
-    ::Rf_error("you must have j1 < p and j2 < p"); //!!! beware of R indices starting at 0 
-  }
+  
+    if (c.size() != n) {
+      ::Rf_error("you must have c.size() == x.nrow()");
+    }
+  
+    if (j1 == j2) {
+      ::Rf_error("you must have j1 != j2"); //Different columns indices
+    }
+  
+    if (j1 >= p || j2 >= p) {
+      ::Rf_error("you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
+    }
 
   double r = 0;
-  double n2 = pow(n, 2);
   double temp = sqrt(3)/l;
   double temp2 = 0;
   double const_mult = pow(temp, 3);
-  NumericVector deriv_inter(n2);
-  unsigned long int i = 0;
-
+  NumericMatrix res(n, n);
+  
   for(unsigned long int i0 = 0; i0 < n; i0++){
     for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
       temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
       r = l2_norm(x(i0, _) - x(k, _));
-      deriv_inter(i) = (c(k)/r)*exp(-temp*r)*temp2; // first derivative
-      i++;
+      res(i0, k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative
     }
   }
   
-  return (const_mult*deriv_inter);
+  return (const_mult*res);
 }
 
 //[[Rcpp::export]]
