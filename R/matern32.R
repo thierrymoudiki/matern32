@@ -126,7 +126,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   {
     if (length(lambda) <= 1)
     {
-      
       K_plus <- K + lambda*diag(n)
       invK <- chol2inv(chol(K_plus))
       coef <- invK%*%centered_y
@@ -277,9 +276,9 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
   if (is.vector(newx))
     newx <- t(newx)
   
-  K_star <- matern32_kxstar_cpp(newx = matern32::my_scale(x = newx,
+  K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
                                                           xm = as.vector(fit_obj$xm),
-                                                          xsd = as.vector(fit_obj$scales)), 
+                                                          xsd = as.vector(fit_obj$scales))), 
                                 x = fit_obj$scaled_x, 
                                 l = fit_obj$l)
   
