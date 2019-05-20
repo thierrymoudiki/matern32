@@ -10,7 +10,6 @@
 #' @examples
 derivs_matern32 <- function(fit_obj)
 {
-  
   n <- nrow(fit_obj$scaled_x)
   
   if(n > 500)
@@ -18,7 +17,11 @@ derivs_matern32 <- function(fit_obj)
   
   if (!is.null(dim(fit_obj$coef)))
   {
-    i_best <- which.min(fit_obj$GCV)
+    i_best <- switch(fit_obj$fit_method, 
+                     "svd" = which.min(fit_obj$GCV),
+                     "eigen" = which.min(fit_obj$loocv),
+                     "chol" = which.min(fit_obj$loocv))
+    
     res <- derivs(x = fit_obj$scaled_x, 
                   c = fit_obj$coef[, i_best], 
                   l = fit_obj$l[1])

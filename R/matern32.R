@@ -82,10 +82,11 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   
   K <- matern32_kxx_cpp(x = X, l = l) 
   
+  if(n > 500)
+    cat("Processing...", "\n")
+  
   if (method == "svd")
   {
-    if(n > 500)
-      cat("Processing...", "\n")
     Xs <- La.svd(K)
     rhs <- crossprod(Xs$u, centered_y)
     d <- Xs$d
@@ -115,11 +116,13 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     names(R_Squared) <- lambda
     
     return(list(K = K, l = l, 
+                lambda = lambda,
                 coef = drop(coef), scales = x_scaled$xsd,
                 ym = ym, xm = x_scaled$xm,
                 fitted_values = fitted_values, resid = resid,
                 GCV = GCV, R_Squared = R_Squared, 
-                scaled_x = X, centered_y = centered_y))
+                scaled_x = X, centered_y = centered_y, 
+                fit_method = method))
   }
   
   if (method == "chol")
@@ -129,7 +132,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       K_plus <- K + lambda*diag(n)
       invK <- chol2inv(chol(K_plus))
       coef <- invK%*%centered_y
-      loocv <- drop(coef/diag(invK))
+      loocv <- sum(drop(coef/diag(invK))^2)
       
     } else { # length(lambda) > 1
       
@@ -145,9 +148,9 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       fit_res <- lapply(lambda, function(x) get_loocv(x))
       n_fit_res <- length(fit_res)
       
-      loocvs <- sqrt(colMeans(sapply(1:n_fit_res,  
-                       function(i) fit_res[[i]]$loocv)^2))
-      names(loocvs) <- lambda
+      loocv <- colSums(sapply(1:n_fit_res,  
+                          function(i) fit_res[[i]]$loocv)^2)
+      names(loocv) <- lambda
       
       coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
       colnames(coefs) <- lambda
@@ -168,34 +171,34 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                                lambda = lambda)
       
       coef <- inv_eigen$coeffs
-      loocv <- inv_eigen$loocv 
+      loocv <- sum(inv_eigen$loocv^2)
       
     } else { # length(lambda) > 1
       
-        get_loocv <- function(lambda_i)
-        {
-          eigenK <- base::eigen(K)
-          eigen_values <- eigenK$values
-          Q <- eigenK$vectors 
-          inv_eigen <- solve_eigen(Eigenvectors = Q,
-                                   Eigenvalues = eigen_values,
-                                   y = centered_y,
-                                   lambda = lambda_i)
-          return(list(coef = inv_eigen$coef,
-                      loocv = inv_eigen$loocv))
-        }
-        
-        fit_res <- lapply(lambda, function(x) get_loocv(x))
-        n_fit_res <- length(fit_res)
-        
-        loocvs <- sqrt(colMeans(sapply(1:n_fit_res,  
-                         function(i) fit_res[[i]]$loocv)^2))
-        names(loocvs) <- lambda
-        
-        coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
-        colnames(coefs) <- lambda
-      
+      get_loocv <- function(lambda_i)
+      {
+        eigenK <- base::eigen(K)
+        eigen_values <- eigenK$values
+        Q <- eigenK$vectors 
+        inv_eigen <- solve_eigen(Eigenvectors = Q,
+                                 Eigenvalues = eigen_values,
+                                 y = centered_y,
+                                 lambda = lambda_i)
+        return(list(coef = inv_eigen$coef,
+                    loocv = inv_eigen$loocv))
       }
+      
+      fit_res <- lapply(lambda, function(x) get_loocv(x))
+      n_fit_res <- length(fit_res)
+      
+      loocv <- colSums(sapply(1:n_fit_res,  
+                          function(i) fit_res[[i]]$loocv)^2)
+      names(loocv) <- lambda
+      
+      coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
+      colnames(coefs) <- lambda
+      
+    }
     
   }
   
@@ -212,12 +215,14 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       R_Squared <- 1 - RSS/TSS
       
       return(list(K = K, l = l, 
+                  lambda = lambda,
                   coef = drop(coef), 
                   scales = x_scaled$xsd,
                   ym = ym, xm = x_scaled$xm,
                   fitted_values = fitted_values, resid = drop(resid),
-                  loocv = loocvs, R_Squared = R_Squared, 
-                  scaled_x = X, centered_y = centered_y))  
+                  loocv = loocv, R_Squared = R_Squared, 
+                  scaled_x = X, centered_y = centered_y, 
+                  fit_method = method))  
     } else { 
       centered_y_hat <- K %*% coefs
       fitted_values <- drop(ym +  centered_y_hat)
@@ -227,17 +232,18 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       TSS <- sum((y - ym)^2)
       R_Squared <- 1 - RSS/TSS
       names(R_Squared) <- lambda
-    
+      
       return(list(K = K, l = l, 
+                  lambda = lambda,
                   coef = drop(coefs), 
                   scales = x_scaled$xsd,
                   ym = ym, xm = x_scaled$xm,
                   fitted_values = fitted_values, resid = resid,
-                  loocv = loocvs, R_Squared = R_Squared, 
-                  scaled_x = X, centered_y = centered_y)) 
+                  loocv = loocv, R_Squared = R_Squared, 
+                  scaled_x = X, centered_y = centered_y, 
+                  fit_method = method)) 
     }
   }
-  
 }
 
 
@@ -277,8 +283,8 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
     newx <- t(newx)
   
   K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
-                                                          xm = as.vector(fit_obj$xm),
-                                                          xsd = as.vector(fit_obj$scales))), 
+                                                                    xm = as.vector(fit_obj$xm),
+                                                                    xsd = as.vector(fit_obj$scales))), 
                                 x = fit_obj$scaled_x, 
                                 l = fit_obj$l)
   

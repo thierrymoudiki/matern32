@@ -11,27 +11,36 @@ summary.matern32 <- function(fit_obj, obs = NULL)
 {
   n <- nrow(fit_obj$scaled_x)
   p <- ncol(fit_obj$scaled_x)
-  index_lam <- NULL
   
-  if (!is.null(fit_obj$GCV))
-    index_lam <- which.min(fit_obj$GCV)
+  index_lam <- switch(fit_obj$fit_method, 
+                   "svd" = which.min(fit_obj$GCV),
+                   "eigen" = which.min(fit_obj$loocv),
+                   "chol" = which.min(fit_obj$loocv))
   
-  if (!is.null(index_lam)) # multiple lambdas 
+    if(!is.null(fit_obj$GCV))
+    {
+      GCV <- fit_obj$GCV[index_lam]
+    } else {
+      loocv <- fit_obj$loocv[index_lam]
+    }
+  
+  if (!is.null(ncol(fit_obj$coef))) # multiple lambdas 
   {
     R_Squared <- fit_obj$R_Squared[index_lam]
     residuals <- fit_obj$resid[ , index_lam]
-    summary_resid <- matrix(summary(residuals), nrow = 1)
-    colnames(summary_resid) <- c("Min.", "1st Qu.",  "Median", "Mean", "3rd Qu.", "Max.")
+    best_lam <- fit_obj$lambda[index_lam]
     
   } else { # one lambda
-    
+
     R_Squared <- fit_obj$R_Squared
     residuals <- fit_obj$resid
-    summary_resid <- matrix(summary(residuals), nrow = 1)
-    colnames(summary_resid) <- c("Min.", "1st Qu.",  "Median", "Mean", "3rd Qu.", "Max.")
-    
+    best_lam <- fit_obj$lambda
   }
   
+  summary_resid <- quantile(residuals, 
+                            probs = c(0, 25, 50, 75, 100)/100)
+  names(summary_resid) <- c("Min.", "1st Qu.",  "Median", 
+                            "3rd Qu.", "Max.")
 
     if (is.null(obs))
     {
@@ -103,6 +112,12 @@ summary.matern32 <- function(fit_obj, obs = NULL)
   print(distro_effects)
   cat("\n")
   cat("Multiple R-squared:  ", R_Squared, "\n")
+  if(!is.null(fit_obj$GCV))
+  {
+    cat("GCV error:  ", GCV, "lambda: ", best_lam, "\n")
+  } else {
+    cat("LOOCV error:  ", loocv, "lambda: ", best_lam, "\n")
+  }
   
   return(invisible(coefficients))
 }
