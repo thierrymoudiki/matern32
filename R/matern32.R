@@ -65,9 +65,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   p <- dim(x)[2]
   stopifnot(n == length(y))
   
-  if (is.null(l))
-    l <- sqrt(p)
-  
   # centered response
   ym <- mean(y)
   centered_y <- y - ym
@@ -75,6 +72,9 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   # construct covariance
   x_scaled <- matern32::my_scale(x)
   X <- x_scaled$res
+  
+  if (is.null(l))
+    l <- sqrt(p)
   
   # compute kernel as a vector if necessary
   if (length(l) == 1)
@@ -119,7 +119,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                 ym = ym, xm = x_scaled$xm,
                 fitted_values = fitted_values, resid = resid,
                 GCV = GCV, R_Squared = R_Squared, 
-                scaled_x = X, centered_y = centered_y)) 
+                scaled_x = X, centered_y = centered_y))
   }
   
   if (method == "chol")
@@ -134,14 +134,24 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       
     } else { # length(lambda) > 1
       
-      get_loocv <- function(lambda)
+      get_loocv <- function(lambda_i)
       {
-        K_plus <- K + lambda*diag(n)
+        K_plus <- K + lambda_i*diag(n)
         invK <- chol2inv(chol(K_plus))
         coef <- invK%*%centered_y
-        
-        return(drop(coef/diag(invK)))
+        return(list(coef = coef,
+                    loocv = drop(coef/diag(invK))))
       }
+      
+      fit_res <- lapply(lambda, function(x) get_loocv(x))
+      n_fit_res <- length(fit_res)
+      
+      loocvs <- sqrt(colMeans(sapply(1:n_fit_res,  
+                       function(i) fit_res[[i]]$loocv)^2))
+      names(loocvs) <- lambda
+      
+      coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
+      colnames(coefs) <- lambda
       
     }
   }
@@ -150,7 +160,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   {
     if(length(lambda) <= 1)
     {
-      
       eigenK <- base::eigen(K)
       eigen_values <- eigenK$values
       Q <- eigenK$vectors 
@@ -164,23 +173,34 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       
     } else { # length(lambda) > 1
       
-      get_loocv <- function(lambda)
-      {
-        eigenK <- base::eigen(K)
-        eigen_values <- eigenK$values
-        Q <- eigenK$vectors 
-        inv_eigen <- solve_eigen(Eigenvectors = Q,
-                                 Eigenvalues = eigen_values,
-                                 y = centered_y,
-                                 lambda = lambda)
+        get_loocv <- function(lambda_i)
+        {
+          eigenK <- base::eigen(K)
+          eigen_values <- eigenK$values
+          Q <- eigenK$vectors 
+          inv_eigen <- solve_eigen(Eigenvectors = Q,
+                                   Eigenvalues = eigen_values,
+                                   y = centered_y,
+                                   lambda = lambda_i)
+          return(list(coef = inv_eigen$coef,
+                      loocv = inv_eigen$loocv))
+        }
         
-        return(inv_eigen$loocv)
-      }
+        fit_res <- lapply(lambda, function(x) get_loocv(x))
+        n_fit_res <- length(fit_res)
+        
+        loocvs <- sqrt(colMeans(sapply(1:n_fit_res,  
+                         function(i) fit_res[[i]]$loocv)^2))
+        names(loocvs) <- lambda
+        
+        coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
+        colnames(coefs) <- lambda
       
-    }
+      }
+    
   }
   
-  if (method %in% c("chol", "svd"))
+  if (method %in% c("chol", "eigen"))
   {
     if (length(lambda) == 1)
     {
@@ -193,15 +213,29 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       R_Squared <- 1 - RSS/TSS
       
       return(list(K = K, l = l, 
-                  coef = drop(coef), scales = x_scaled$xsd,
+                  coef = drop(coef), 
+                  scales = x_scaled$xsd,
                   ym = ym, xm = x_scaled$xm,
                   fitted_values = fitted_values, resid = drop(resid),
-                  loocv = loocv, R_Squared = R_Squared, 
+                  loocv = loocvs, R_Squared = R_Squared, 
                   scaled_x = X, centered_y = centered_y))  
+    } else { 
+      centered_y_hat <- K %*% coefs
+      fitted_values <- drop(ym +  centered_y_hat)
+      resid <- centered_y - centered_y_hat
       
-    } else { # length(lambda) > 1
-      
-      
+      RSS <- colSums((y - fitted_values)^2)
+      TSS <- sum((y - ym)^2)
+      R_Squared <- 1 - RSS/TSS
+      names(R_Squared) <- lambda
+    
+      return(list(K = K, l = l, 
+                  coef = drop(coefs), 
+                  scales = x_scaled$xsd,
+                  ym = ym, xm = x_scaled$xm,
+                  fitted_values = fitted_values, resid = resid,
+                  loocv = loocvs, R_Squared = R_Squared, 
+                  scaled_x = X, centered_y = centered_y)) 
     }
   }
   
