@@ -33,6 +33,10 @@ inters <- function(x, j1, j2, c, l) {
     .Call('_matern32_inters', PACKAGE = 'matern32', x, j1, j2, c, l)
 }
 
+inters2 <- function(x, j1, j2, c, l) {
+    .Call('_matern32_inters2', PACKAGE = 'matern32', x, j1, j2, c, l)
+}
+
 solve_eigen <- function(Eigenvectors, Eigenvalues, y, lambda) {
     .Call('_matern32_solve_eigen', PACKAGE = 'matern32', Eigenvectors, Eigenvalues, y, lambda)
 }

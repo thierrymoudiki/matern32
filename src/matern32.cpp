@@ -3,7 +3,9 @@
 using namespace Rcpp;
 
 
+
 /* 0 - utils */
+
 
 // [[Rcpp::export]]
 double crossprod_cpp(NumericVector x, NumericVector y)
@@ -22,6 +24,7 @@ double crossprod_cpp(NumericVector x, NumericVector y)
   return(res);
 }
 
+
 // [[Rcpp::export]]
 double l2_norm(NumericVector x)
 {
@@ -35,6 +38,7 @@ double l2_norm(NumericVector x)
   return(sqrt(res));
 }
 
+
 // [[Rcpp::export]]
 NumericMatrix na_matrix(unsigned int n, unsigned int p)
 {
@@ -42,6 +46,7 @@ NumericMatrix na_matrix(unsigned int n, unsigned int p)
   std::fill( m.begin(), m.end(), NumericVector::get_na() ) ;
   return m ;
 }
+
 
 // [[Rcpp::export]]
 double weighted_l2_norm(NumericVector x, NumericVector l)
@@ -58,7 +63,9 @@ double weighted_l2_norm(NumericVector x, NumericVector l)
 }
 
 
+
 /* 1 - Matérn 3/2 kernel */
+
 
 // [[Rcpp::export]]
 NumericMatrix matern32_kxx_cpp(NumericMatrix x, 
@@ -80,6 +87,7 @@ NumericMatrix matern32_kxx_cpp(NumericMatrix x,
   return(res);
 }
 
+
 // [[Rcpp::export]]
 NumericMatrix matern32_kxstar_cpp(NumericMatrix newx, 
                                   NumericMatrix x,
@@ -100,6 +108,11 @@ NumericMatrix matern32_kxstar_cpp(NumericMatrix newx,
   
   return(res);
 }
+
+
+
+/* 2 - Derivatives */
+
 
 // [[Rcpp::export]]
 List derivs(NumericMatrix x, // matrix of inputs
@@ -140,8 +153,9 @@ List derivs(NumericMatrix x, // matrix of inputs
                       Rcpp::Named("deriv2") = const_mult*deriv2);
 }
 
+
 //[[Rcpp::export]]
-NumericVector inters(NumericMatrix x, // matrix of covariates
+NumericMatrix inters(NumericMatrix x, // matrix of covariates
                      unsigned long int j1, // index of first column
                      unsigned long int j2, // index of second column
                      NumericVector c, // coefficients (so that y = K*c)
@@ -182,6 +196,54 @@ NumericVector inters(NumericMatrix x, // matrix of covariates
   return (const_mult*res);
 }
 
+
+//[[Rcpp::export]]
+NumericVector inters2(NumericMatrix x, // matrix of covariates
+                     unsigned long int j1, // index of first column
+                     unsigned long int j2, // index of second column
+                     NumericVector c, // coefficients (so that y = K*c)
+                     double l) //lengthscale parameter 
+{
+  
+  unsigned long int n = x.nrow();
+  unsigned long int p = x.ncol();
+  j1 = j1 - 1; //!!! beware of R indices starting at 0
+  j2 = j2 - 1; //!!! beware of R indices starting at 0
+  
+  if (c.size() != n) {
+    ::Rf_error("you must have c.size() == x.nrow()");
+  }
+  
+  if (j1 == j2) {
+    ::Rf_error("you must have j1 != j2"); //Different columns indices
+  }
+  
+  if (j1 >= p || j2 >= p) {
+    ::Rf_error("you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
+  }
+  
+  double r = 0;
+  double temp = sqrt(3)/l;
+  double temp2 = 0;
+  double const_mult = pow(temp, 3);
+  NumericVector res(pow(n, 2));
+  
+  for(unsigned long int i0 = 0; i0 < n; i0++){
+    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
+      temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
+      r = l2_norm(x(i0, _) - x(k, _));
+      res(i0*n + k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative
+    }
+  }
+  
+  return (const_mult*res);
+}
+
+
+
+/* 3 - Eigen decomp... */
+
+
 //[[Rcpp::export]]
 List solve_eigen(NumericMatrix Eigenvectors,
                     const NumericVector Eigenvalues,
@@ -218,6 +280,7 @@ List solve_eigen(NumericMatrix Eigenvectors,
   return List::create(Rcpp::Named("loocv") = loocv,
                       Rcpp::Named("coeffs") = coeffs);
 }
+
 
 //[[Rcpp::export]]
 double find_lam_eigen(NumericMatrix Eigenvectors,

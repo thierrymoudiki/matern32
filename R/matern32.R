@@ -5,7 +5,6 @@
 #' @param sigma 
 #' @param l 
 #' @param lambda 
-#' @param get_derivatives
 #' @param ... 
 #'
 #' @return
@@ -51,8 +50,7 @@
 #' abline(h = 0, lty = 2, lwd = 2, col = "red")
 #' 
 fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
-                         l = NULL, get_derivatives = TRUE, 
-                         method = c("svd", "chol", "eigen"),
+                         l = NULL, method = c("svd", "chol", "eigen"),
                          ...)
 {
   method <- match.arg(method)
@@ -133,7 +131,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       invK <- chol2inv(chol(K_plus))
       coef <- invK%*%centered_y
       loocv <- sum(drop(coef/diag(invK))^2)
-      
     } else { # length(lambda) > 1
       
       get_loocv <- function(lambda_i)
@@ -154,7 +151,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       
       coefs <- sapply(1:n_fit_res,  function(i) fit_res[[i]]$coef)
       colnames(coefs) <- lambda
-      
     }
   }
   
@@ -172,7 +168,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       
       coef <- inv_eigen$coeffs
       loocv <- sum(inv_eigen$loocv^2)
-      
     } else { # length(lambda) > 1
       
       get_loocv <- function(lambda_i)
@@ -199,7 +194,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       colnames(coefs) <- lambda
       
     }
-    
   }
   
   if (method %in% c("chol", "eigen"))

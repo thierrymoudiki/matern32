@@ -121,8 +121,8 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
   if(!is.null(fit_obj$GCV))
   {
     if (verbose == TRUE)
+      cat("\n")
       cat("GCV error:  ", GCV, "lambda: ", best_lam, "\n")
-    
     return(invisible(list(coefficients = coefficients, 
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),
@@ -130,8 +130,8 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
                           best_lam = as.numeric(best_lam))))
   } else {
     if (verbose == TRUE)
+      cat("\n")
       cat("LOOCV error:  ", loocv, "lambda: ", best_lam, "\n")
-    
     return(invisible(list(coefficients = coefficients, 
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),

@@ -91,7 +91,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // inters
-NumericVector inters(NumericMatrix x, unsigned long int j1, unsigned long int j2, NumericVector c, double l);
+NumericMatrix inters(NumericMatrix x, unsigned long int j1, unsigned long int j2, NumericVector c, double l);
 RcppExport SEXP _matern32_inters(SEXP xSEXP, SEXP j1SEXP, SEXP j2SEXP, SEXP cSEXP, SEXP lSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -102,6 +102,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type c(cSEXP);
     Rcpp::traits::input_parameter< double >::type l(lSEXP);
     rcpp_result_gen = Rcpp::wrap(inters(x, j1, j2, c, l));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inters2
+NumericVector inters2(NumericMatrix x, unsigned long int j1, unsigned long int j2, NumericVector c, double l);
+RcppExport SEXP _matern32_inters2(SEXP xSEXP, SEXP j1SEXP, SEXP j2SEXP, SEXP cSEXP, SEXP lSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< unsigned long int >::type j1(j1SEXP);
+    Rcpp::traits::input_parameter< unsigned long int >::type j2(j2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type c(cSEXP);
+    Rcpp::traits::input_parameter< double >::type l(lSEXP);
+    rcpp_result_gen = Rcpp::wrap(inters2(x, j1, j2, c, l));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -153,6 +168,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_matern32_matern32_kxstar_cpp", (DL_FUNC) &_matern32_matern32_kxstar_cpp, 3},
     {"_matern32_derivs", (DL_FUNC) &_matern32_derivs, 3},
     {"_matern32_inters", (DL_FUNC) &_matern32_inters, 5},
+    {"_matern32_inters2", (DL_FUNC) &_matern32_inters2, 5},
     {"_matern32_solve_eigen", (DL_FUNC) &_matern32_solve_eigen, 4},
     {"_matern32_find_lam_eigen", (DL_FUNC) &_matern32_find_lam_eigen, 4},
     {"_matern32_rcpp_hello_world", (DL_FUNC) &_matern32_rcpp_hello_world, 0},
