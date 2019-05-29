@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-derivs_matern32 <- function(fit_obj)
+derivatives <- function(fit_obj)
 {
   n <- nrow(fit_obj$scaled_x)
   
@@ -53,7 +53,7 @@ derivs_matern32 <- function(fit_obj)
 #' @export
 #'
 #' @examples
-inters_matern32 <- function(fit_obj, index_col1, index_col2)
+interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
 {
   n <- nrow(fit_obj$scaled_x)
   p <- ncol(fit_obj$scaled_x)
@@ -66,23 +66,43 @@ inters_matern32 <- function(fit_obj, index_col1, index_col2)
                        "eigen" = which.min(fit_obj$loocv),
                        "chol" = which.min(fit_obj$loocv))
       
-      res_inters <- inters(x = fit_obj$scaled_x, j1 = index_col1,
+      res_inters <- inters(x = as.matrix(fit_obj$scaled_x), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef[ , i_best], 
                            l = l)
     } else {
-      res_inters <- inters(x = fit_obj$scaled_x, j1 = index_col1,
+      
+      res_inters <- inters(x = as.matrix(fit_obj$scaled_x), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef, 
                            l = l)
     }
+    colnames(res_inters) <- paste(rep(1, n),
+                                  seq(1, n), sep = ".")
+    rownames(res_inters) <- paste(seq(1, n),
+                                  rep(1, n), sep = ".")
   
-  res <- apply(res_inters, 1, summary)[-7,]
-  colnames(res) <- paste0("obs", 1:n) 
+    if (is.null(obs)) # for all the observations 
+    {
+      if (!is.null(colnames(fit_obj$scaled_x)))
+      {
+        col_names <- colnames(fit_obj$scaled_x)
+        cat("Interaction effects between", col_names[index_col1],
+            " and ", col_names[index_col2], ":\n") 
+      }
+      
+      print(summary(as.vector(res_inters)))
+      return(invisible(res_inters)) 
+      
+    } else { # for one observation
+      
+      if (!is.null(colnames(fit_obj$scaled_x)))
+      {
+        col_names <- colnames(fit_obj$scaled_x)
+        cat("Interaction effects between", col_names[index_col1],
+            " and ", col_names[index_col2], "for observation #", obs, ":\n") 
+      }
+      
+      print(summary(as.vector(res_inters[obs, ])))
+      return(invisible(res_inters[obs, ])) 
+    }
   
-  if (!is.null(colnames(fit_obj$scaled_x)))
-  {
-    col_names <- colnames(fit_obj$scaled_x)
-    cat("Interaction effects between", col_names[index_col1]," and ", col_names[index_col2], ":\n") 
-  }
-  
-  return(res)
 }

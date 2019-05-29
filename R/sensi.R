@@ -2,9 +2,9 @@
 
 #' Title
 #'
-#' @param fit_obj 
-#' @param index_col 
-#' @param h 
+#' @param fit_obj object fitted by using \code{fit_matern32}
+#' @param index_col an integer, column index 
+#' @param h (must be small)
 #'
 #' @return
 #' @export
@@ -26,12 +26,12 @@ sensi1D <- function(fit_obj, index_col, h)
                      "chol" = which.min(fit_obj$loocv))
     
     ans_derivs <- derivs(x = fit_obj$scaled_x, 
-                  c = fit_obj$coef[, i_best], 
-                  l = fit_obj$l[1])
+                         c = fit_obj$coef[, i_best], 
+                         l = fit_obj$l[1])
   } else {
     ans_derivs <- derivs(x = fit_obj$scaled_x, 
-                  c = fit_obj$coef, 
-                  l = fit_obj$l[1])
+                         c = fit_obj$coef, 
+                         l = fit_obj$l[1])
   }
   
   res <- ans_derivs$deriv1[, index_col]*h + 0.5*ans_derivs$deriv2[, index_col]*(h^2)
@@ -46,10 +46,10 @@ sensi1D <- function(fit_obj, index_col, h)
 
 #' Title
 #'
-#' @param fit_obj 
-#' @param index_col1 
-#' @param index_col2 
-#' @param h 
+#' @param fit_obj object fitted by using \code{fit_matern32}
+#' @param index_col1 an integer, column index 
+#' @param index_col2 an integer, second column index 
+#' @param h (must be small)
 #'
 #' @return
 #' @export
@@ -72,11 +72,11 @@ sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2)
     
     # d1 & d2
     ans_derivs <- derivs(x = fit_obj$scaled_x, 
-                  c = fit_obj$coef[, i_best], 
-                  l = fit_obj$l[1])
+                         c = fit_obj$coef[, i_best], 
+                         l = fit_obj$l[1])
     
     # inters
-    interactions <- inters2(fit_obj$scaled_x, j1 = index_col1, j2 = index_col2, 
+    term_interactions <- inters2(fit_obj$scaled_x, j1 = index_col1, j2 = index_col2, 
                             c = fit_obj$coef[, i_best], l = fit_obj$l[1])
     
   } else {
@@ -87,13 +87,14 @@ sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2)
                   l = fit_obj$l[1])
     
     # inters
-    interactions <- inters2(fit_obj$scaled_x, j1 = index_col1, j2 = index_col2, 
+    term_interactions <- inters2(fit_obj$scaled_x, j1 = index_col1, j2 = index_col2, 
                             c = fit_obj$coef, l = fit_obj$l[1])
   }
   
-  series1 <- ans_derivs$deriv1[, index_col1]*h1 + 0.5*ans_derivs$deriv2[, index_col1]*(h1^2)
-  series2 <- ans_derivs$deriv1[, index_col2]*h2 + 0.5*ans_derivs$deriv2[, index_col2]*(h2^2)
-  res <-  series1 + series2 + interactions
+  term1 <- ans_derivs$deriv1[, index_col1]*h1 + 0.5*ans_derivs$deriv2[, index_col1]*(h1^2)
+  term2 <- ans_derivs$deriv1[, index_col2]*h2 + 0.5*ans_derivs$deriv2[, index_col2]*(h2^2)
+  
+  res <-  term1 + term2 + term_interactions
   names(res) <- paste(rep(1:n, each = n),
                       rep(1:n), sep = ".")
   

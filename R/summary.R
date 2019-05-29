@@ -44,12 +44,12 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
   
   if (is.null(obs))
   {
-    derivatives <- matern32::derivs_matern32(fit_obj)[[1]]
+    derivatives <- matern32::derivatives(fit_obj)[[1]]
   } else {
     stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
     upper_bound <- n*obs
     lower_bound <- n*obs - n + 1
-    derivatives <- matern32::derivs_matern32(fit_obj)[[1]][lower_bound:upper_bound, ]
+    derivatives <- matern32::derivatives(fit_obj)[[1]][lower_bound:upper_bound, ]
   }
   
   n_derivatives <- nrow(derivatives)
