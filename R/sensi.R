@@ -1,5 +1,4 @@
 
-
 #' Title
 #'
 #' @param fit_obj object fitted by using \code{fit_matern32}
@@ -10,7 +9,7 @@
 #' @export
 #'
 #' @examples
-sensi1D <- function(fit_obj, index_col, h)
+sensi1D <- function(fit_obj, index_col, h, verbose=TRUE)
 {
   n <- nrow(fit_obj$scaled_x)
   
@@ -38,7 +37,16 @@ sensi1D <- function(fit_obj, index_col, h)
   names(res) <- paste(rep(1:n, each = n),
                       rep(1:n), sep = ".")
   
-  print(summary(res[!is.na(res)]))
+  
+  if (verbose)
+  {
+    col_names <- colnames(fit_obj$scaled_x)
+    if (!is.null(col_names))
+      cat("Heterogeneity of changes in the response for", 
+          col_names[index_col], 
+          ifelse(h > 0, "+", "-"), abs(h),": \n")
+    print(summary(res[!is.na(res)]))
+  }
   
   return(invisible(res))
 }
@@ -55,7 +63,7 @@ sensi1D <- function(fit_obj, index_col, h)
 #' @export
 #'
 #' @examples
-sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2)
+sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2, verbose=TRUE)
 {
   n <- nrow(fit_obj$scaled_x)
   
@@ -93,12 +101,19 @@ sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2)
   
   term1 <- ans_derivs$deriv1[, index_col1]*h1 + 0.5*ans_derivs$deriv2[, index_col1]*(h1^2)
   term2 <- ans_derivs$deriv1[, index_col2]*h2 + 0.5*ans_derivs$deriv2[, index_col2]*(h2^2)
-  
   res <-  term1 + term2 + term_interactions
   names(res) <- paste(rep(1:n, each = n),
                       rep(1:n), sep = ".")
   
-  print(summary(res[!is.na(res)]))
+  if (verbose)
+  {
+    col_names <- colnames(fit_obj$scaled_x)
+    if (!is.null(col_names))
+      cat("Heterogeneity of changes in the response for \n", col_names[index_col1], 
+          ifelse(h1 > 0, "+", "-"), abs(h1), " and ", col_names[index_col2], 
+          ifelse(h2 > 0, "+", "-"), abs(h2), ": \n")
+    print(summary(res[!is.na(res)])) 
+  }
   
   return(invisible(res))
 }
