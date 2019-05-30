@@ -1,3 +1,8 @@
+# Cpp functions (used in summary and sensi1 and 2D)
+derivs <- memoise::memoize(derivs)
+inters <- memoise::memoize(inters)
+inters2 <- memoise::memoize(inters2)
+  
 #' Title
 #'
 #' @param fit_obj 

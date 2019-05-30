@@ -145,5 +145,4 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
                           loocv = as.numeric(loocv), 
                           best_lam = as.numeric(best_lam))))
   }
-  
 }
