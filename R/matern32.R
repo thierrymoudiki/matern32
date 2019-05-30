@@ -113,14 +113,18 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     R_Squared <- 1 - RSS/TSS
     names(R_Squared) <- lambda
     
-    return(list(K = K, l = l, 
+    res <- list(K = K, l = l, 
                 lambda = lambda,
                 coef = drop(coef), scales = x_scaled$xsd,
                 ym = ym, xm = x_scaled$xm,
                 fitted_values = fitted_values, resid = resid,
                 GCV = GCV, R_Squared = R_Squared, 
                 scaled_x = X, centered_y = centered_y, 
-                fit_method = method))
+                fit_method = method)
+    
+    class(res) <- "matern32"
+    
+    return(res)
   }
   
   if (method == "chol")
@@ -208,7 +212,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       TSS <- sum((y - ym)^2)
       R_Squared <- 1 - RSS/TSS
       
-      return(list(K = K, l = l, 
+      res <- list(K = K, l = l, 
                   lambda = lambda,
                   coef = drop(coef), 
                   scales = x_scaled$xsd,
@@ -216,7 +220,11 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                   fitted_values = fitted_values, resid = drop(resid),
                   loocv = loocv, R_Squared = R_Squared, 
                   scaled_x = X, centered_y = centered_y, 
-                  fit_method = method))  
+                  fit_method = method)
+      
+      class(res) <- "matern32"
+      
+      return(res)  
     } else { 
       centered_y_hat <- K %*% coefs
       fitted_values <- drop(ym +  centered_y_hat)
@@ -227,7 +235,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       R_Squared <- 1 - RSS/TSS
       names(R_Squared) <- lambda
       
-      return(list(K = K, l = l, 
+      res <- list(K = K, l = l, 
                   lambda = lambda,
                   coef = drop(coefs), 
                   scales = x_scaled$xsd,
@@ -235,7 +243,11 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                   fitted_values = fitted_values, resid = resid,
                   loocv = loocv, R_Squared = R_Squared, 
                   scaled_x = X, centered_y = centered_y, 
-                  fit_method = method)) 
+                  fit_method = method)
+      
+      class(res) <- "matern32"
+      
+      return(res) 
     }
   }
 }
@@ -252,7 +264,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
 #'
 #' @examples
 #' 
-#' 
 #' n <- 10 ; p <- 4
 #' 
 #' set.seed(456)
@@ -261,7 +272,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
 #' 
 #' lams <- 10^seq(-5, 4, length.out = 50)
 #' 
-#' # use matern32::find_params_matern32 to find sigma and l
 #' fit_obj <- fit_matern32(x = X, y = y, lambda = lams)
 #' 
 #' df <- data.frame(predict_matern32(fit_obj, newx = X) - y)

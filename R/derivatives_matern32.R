@@ -1,5 +1,3 @@
-
-
 #' Title
 #'
 #' @param fit_obj 
@@ -31,7 +29,7 @@ derivatives <- function(fit_obj, obs = NULL)
                     l = fit_obj$l[1])
     }
   
-  if (is.null(obs))
+  if (is.null(obs)) # all the observations
   {
     col_names_x <- colnames(fit_obj$scaled_x)
     
@@ -45,7 +43,7 @@ derivatives <- function(fit_obj, obs = NULL)
     
     return(res)
     
-  } else {
+  } else { # one observation
     
     stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
     upper_bound <- n*obs
@@ -63,9 +61,7 @@ derivatives <- function(fit_obj, obs = NULL)
     names(res) <- c("1D", "2D")
     
     return(res)
-    
   }
-  
 }
 
 
@@ -97,7 +93,6 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
                            j2 = index_col2, c = fit_obj$coef[ , i_best], 
                            l = l)
     } else {
-      
       res_inters <- inters(x = as.matrix(fit_obj$scaled_x), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef, 
                            l = l)
@@ -118,7 +113,6 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
       
       print(summary(as.vector(res_inters)))
       return(invisible(res_inters)) 
-      
     } else { # for one observation
       
       stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
@@ -132,5 +126,4 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
       print(summary(as.vector(res_inters[obs, ])))
       return(invisible(res_inters[obs, ])) 
     }
-  
 }

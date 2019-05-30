@@ -101,7 +101,7 @@ NumericMatrix matern32_kxstar_cpp(NumericMatrix newx,
   
   for(int i = 0; i < m; i++) {
     for(int j = 0; j < n; j++) {
-      temp = sqrt3*sqrt(weighted_l2_norm(newx(i, _) - x(j, _), l));
+      temp = sqrt3*weighted_l2_norm(newx(i, _) - x(j, _), l);
       res(i , j) = (1 + temp)*exp(-temp);
     }
   }

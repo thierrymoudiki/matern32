@@ -9,6 +9,13 @@
 #' @examples
 summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
 {
+  if(class(fit_obj) != "matern32")
+  {
+    warning("`object` must be of class 'matern32'")
+    UseMethod("summary")
+    return(invisible(NULL))
+  }
+  
   n <- nrow(fit_obj$scaled_x)
   p <- ncol(fit_obj$scaled_x)
   
