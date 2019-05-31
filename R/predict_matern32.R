@@ -9,7 +9,7 @@
 #'
 #' @examples
 #' 
-#' n <- 10 ; p <- 4
+#' n <- 100 ; p <- 4
 #' 
 #' set.seed(456)
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!

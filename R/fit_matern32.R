@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' 
-#' n <- 10; p <- 4
+#' n <- 1000; p <- 4
 #' 
 #' set.seed(456)
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!

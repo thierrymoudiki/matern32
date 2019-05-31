@@ -68,6 +68,7 @@ derivatives <- function(fit_obj, obs = NULL)
     return(res)
   }
 }
+derivatives <- memoise::memoize(derivatives)
 
 
 #' Title
@@ -132,3 +133,4 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
       return(invisible(res_inters[obs, ])) 
     }
 }
+interactions <- memoise::memoize(interactions)
