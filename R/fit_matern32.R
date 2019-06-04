@@ -118,7 +118,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                 ym = ym, xm = x_scaled$xm,
                 fitted_values = fitted_values, resid = resid,
                 GCV = GCV, R_Squared = R_Squared, 
-                scaled_x = X, centered_y = centered_y, 
+                scaled_x = X, x = x, centered_y = centered_y, 
                 fit_method = method)
     
     class(res) <- "matern32"

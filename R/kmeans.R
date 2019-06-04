@@ -24,9 +24,14 @@
 #   kmeansBIC(X, as.integer(k))
 # }
 # 
-# # use foreach and parallel if necessary
-# res <- sapply(1:min(50, nrow(X)-1), 
-#               function (x) OF(x))
+# nb_k <- min(50, nrow(X)-1)
+# res <- rep(0, nb_k)
+# pb <- txtProgressBar(min = 1, max = nb_k, style = 3)
+# for (i in 1:nb_k){
+#   res[i] <- OF(i)
+#   setTxtProgressBar(pb, i)
+#   close(pb)
+# }
 # 
 # plot(res, type = 'l', main = "BIC = \n f(number of clusters)",
 #      ylab = "BIC", xlab = "number of clusters")
