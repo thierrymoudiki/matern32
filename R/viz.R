@@ -1,5 +1,147 @@
 
 
+#' Title
+#'
+#' @param fit_obj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_coeffs1 <- function(fit_obj)
+{
+  stopifnot(length(fit_obj$lambda) > 1)
+  matplot(log(lams), t(fit_obj$coef), type = 'l', 
+  main = "coefficients = f(lambda)", xlab = "log(lambda)", 
+  ylab = "coefs")
+  abline(h = 0, lty = 2, lwd = 2, col = "red")
+}
+
+#' Title
+#'
+#' @param fit_obj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_GCV <- function(fit_obj){
+  plot(fit_obj$GCV, type = 'l')
+}
+
+
+#' Title
+#'
+#' @param fit_obj 
+#' @param var 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_heterogen1 <- function(fit_obj, var = 1, ...)
+{
+  d1 <- derivatives(fit_obj)$`1D`
+  col_names <- colnames(fit_obj$scaled_x)
+  
+  if (!is.null(col_names))
+  {
+    h <- hist(d1[, var], 
+              main = paste("Heterogeneity of \n 1st order effects for ", col_names[var]), 
+              xlab = "1st order effect", ...) 
+  } else {
+    h <- hist(d1[, var], 
+              main = paste("Heterogeneity of \n 1st order effects for covariate", var), 
+              xlab = "1st order effect", ...)
+  }
+    
+  return(list(breaks = h$breaks, 
+              counts = h$count))
+}
+
+
+plot_interactions1 <- function(fit_obj, var1 = 1, var2 = 2, ...)
+{
+  stopifnot(var1 != var2)
+  col_names <- colnames(fit_obj$scaled_x)
+  res <- matern32::interactions(fit_obj, 
+                                index_col1 = var1, index_col2 = var2)
+  
+  if (!is.null(col_names))
+  {
+    # to be checked: xlab and ylab
+    # to be checked: xlab and ylab 
+    # to be checked:  xlab and ylab
+    filled.contour(z = res, 
+                   main = paste("Interactions of \n", col_names[var1], 
+                                     "and", col_names[var2]), ...)
+  } else {
+    # to be checked:  xlab and ylab
+    # to be checked:  xlab and ylab
+    # to be checked:  xlab and ylab
+    filled.contour(z = res, 
+                   main = paste("Interactions of \n", col_names[var1], 
+                                     "and", col_names[var2]), ...)
+  }
+
+}
+
+#' Title
+#'
+#' @param fit_obj 
+#' @param var 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_heterogen2 <- function(fit_obj, var = 1)
+{
+  n <- nrow(fit_obj$scaled_x)
+  p <- ncol(fit_obj$scaled_x)
+  i <- 2
+  index <- seq(from = i, to = n^2, by = n)
+  
+  # result for each observation
+  #res <- matrix(0, ncol = 6, nrow = n)
+  res <- matrix(0, ncol = n, nrow = n)
+  
+  if (!is.null(dim(fit_obj$coef)))
+  {
+    i_best <- switch(fit_obj$fit_method, 
+                     "svd" = which.min(fit_obj$GCV),
+                     "eigen" = which.min(fit_obj$loocv),
+                     "chol" = which.min(fit_obj$loocv))
+    
+    fitted_values <- fit_obj$fitted_values[,i_best]
+    residuals <- fit_obj$resid[,i_best]
+  } else {
+    fitted_values <- fit_obj$fitted_values
+    residuals <- fit_obj$resid
+  }
+  
+  d1 <- derivatives(fit_obj)$`1D`
+  
+  # cpp loop
+  while (i <= n)
+  {
+    res[i, ] <- as.numeric(d1[index, var])
+    i <- i + 1
+    index <- seq(from = i, to = n^2, by = n)
+  }
+  
+  x_var <- colnames(fit_obj$scaled_x)[var]
+  
+  matplot(fit_obj$x[ , var], res, type = 'p', pch = 20,
+          main = paste("1st order effects of",  x_var, "\n on response"), 
+          xlab = x_var,
+          ylab = "change for an increase of 1")
+  lines(lowess(x = fit_obj$x[ , var], 
+               y = apply(res, 1, median)))
+}
+
+
 
 
 #' Plot residuals
@@ -19,7 +161,7 @@ plot_residuals <- function(fit_obj)
                      "svd" = which.min(fit_obj$GCV),
                      "eigen" = which.min(fit_obj$loocv),
                      "chol" = which.min(fit_obj$loocv))
-  
+    
     fitted_values <- fit_obj$fitted_values[,i_best]
     residuals <- fit_obj$resid[,i_best]
     
@@ -36,66 +178,4 @@ plot_residuals <- function(fit_obj)
        xlab = "fitted values", ylab = "residuals")
   abline(h = 0, col = "red")
   
-}
-
-
-#' Title
-#'
-#' @param fit_obj 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-plot_coeffs <- function(fit_obj, var = 1)
-{
-  n <- nrow(fit_obj$scaled_x)
-  p <- ncol(fit_obj$scaled_x)
-  i <- 2
-  index <- seq(from = i, to = n^2, by = n)
-  
-  # result for each observation
-  #res <- matrix(0, ncol = 6, nrow = n)
-  res <- matrix(0, ncol = n, nrow = n)
-  
-    if (!is.null(dim(fit_obj$coef)))
-    {
-      i_best <- switch(fit_obj$fit_method, 
-                       "svd" = which.min(fit_obj$GCV),
-                       "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
-      
-      fitted_values <- fit_obj$fitted_values[,i_best]
-      residuals <- fit_obj$resid[,i_best]
-    } else {
-      fitted_values <- fit_obj$fitted_values
-      residuals <- fit_obj$resid
-    }
-
-  d1 <- derivatives(fit_obj)$`1D`
-  
-  # cpp loop
-    while (i <= n)
-    {
-      # cat("i = ", i, "\n")
-      # print(d1[index, var])
-      # cat("\n")
-      
-      #res[i, ] <- as.numeric(summary(d1[index, var]))
-      res[i, ] <- as.numeric(d1[index, var])
-      i <- i + 1
-      index <- seq(from = i, to = n^2, by = n)
-    }
-  
-  rownames(res) <- paste0("obs", 1:n)
-  #colnames(res) <- c("Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.")
-  
-  x_var <- colnames(fit_obj$scaled_x)[var]
-  
-  matplot(fit_obj$x[ , var], res, type = 'p', pch = 20,
-          main = paste("effects of",  x_var, "on response"), 
-          xlab = x_var,
-          ylab = "delta_1")
-  lines(lowess(x = fit_obj$x[ , var], 
-               y = apply(res, 1, median)))
 }
