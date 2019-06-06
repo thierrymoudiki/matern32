@@ -65,27 +65,48 @@ plot_interactions1 <- function(fit_obj, var1 = 1, var2 = 2, ...)
 {
   stopifnot(var1 != var2)
   col_names <- colnames(fit_obj$scaled_x)
-  res <- matern32::interactions(fit_obj, 
-                                index_col1 = var1, index_col2 = var2)
+  n <- nrow(fit_obj$scaled_x)
+  
+  if (!is.null(dim(fit_obj$coef)))
+  {
+    i_best <- switch(fit_obj$fit_method, 
+                     "svd" = which.min(fit_obj$GCV),
+                     "eigen" = which.min(fit_obj$loocv),
+                     "chol" = which.min(fit_obj$loocv))
+    
+    res <- inters2(x = fit_obj$scaled_x, j1 = var1, j2 = var2, 
+                  c = fit_obj$coef[, i_best], l = fit_obj$l[1])
+    
+  } else {
+    
+    res <- inters2(x = fit_obj$scaled_x, j1 = var1, j2 = var2, 
+                   c = fit_obj$coef, l = fit_obj$l[1])
+  }
+  
+  grid <- cbind.data.frame(x = rep(fit_obj$x[, var1], n), 
+                           y = rep(fit_obj$x[, var2], n))
+  grid$z <- res 
+  
+  grid <- grid[!is.na(grid$z), ]
   
   if (!is.null(col_names))
   {
-    # to be checked: xlab and ylab
-    # to be checked: xlab and ylab 
-    # to be checked:  xlab and ylab
-    filled.contour(z = res, 
-                   main = paste("Interactions of \n", col_names[var1], 
-                                     "and", col_names[var2]), ...)
+    levelplot(z~x*y, data = grid, col.regions = terrain.colors,
+              main = paste("Interactions of \n", col_names[var1], 
+                                     "and", col_names[var2]), 
+              xlab = col_names[var1], ylab = col_names[var2], ...)
   } else {
-    # to be checked:  xlab and ylab
-    # to be checked:  xlab and ylab
-    # to be checked:  xlab and ylab
-    filled.contour(z = res, 
-                   main = paste("Interactions of \n", col_names[var1], 
-                                     "and", col_names[var2]), ...)
+    levelplot(z~x*y, data = grid, col.regions = terrain.colors,
+              main = paste("Interactions of covariate \n", var1, 
+                           "and covariate", var2), 
+              xlab = paste("covariate", var1), 
+              ylab =  paste("covariate", var2), ...)
   }
 
+  #return(grid)
 }
+
+
 
 #' Title
 #'
