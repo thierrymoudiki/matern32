@@ -104,8 +104,8 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
   # smooth the interactions
   x_var1 <- fit_obj$x[, var1]
   x_var2 <- fit_obj$x[, var2]
-  grid <- cbind.data.frame(x = rep(x_var1, each=n), 
-                           y = rep(x_var2, n))
+  grid <- cbind.data.frame(x = rep(x_var1, n), 
+                         y = rep(x_var2, n))
   grid$z <- res 
   loess_obj <- loess(z ~ ., data = grid, degree = 2)
   
@@ -188,7 +188,6 @@ plot_heterogen2 <- function(fit_obj, var = 1)
   
   d1 <- derivatives(fit_obj)$`1D`
   
-  # cpp loop
   while (i <= n)
   {
     res[i, ] <- as.numeric(d1[index, var])
