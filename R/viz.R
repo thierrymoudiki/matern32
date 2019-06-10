@@ -11,7 +11,7 @@
 plot_coeffs1 <- function(fit_obj)
 {
   stopifnot(length(fit_obj$lambda) > 1)
-  matplot(log(lams), t(fit_obj$coef), type = 'l', 
+  matplot(log(fit_obj$lambda), t(fit_obj$coef), type = 'l', 
   main = "coefficients = f(lambda)", xlab = "log(lambda)", 
   ylab = "coefs")
   abline(h = 0, lty = 2, lwd = 2, col = "red")
@@ -26,7 +26,10 @@ plot_coeffs1 <- function(fit_obj)
 #'
 #' @examples
 plot_GCV <- function(fit_obj){
-  plot(fit_obj$GCV, type = 'l')
+  plot(log(fit_obj$lambda),  fit_obj$GCV, type = 'l', 
+       main = "GCV error", 
+       xlab = "log(lambda)",
+       ylab = "GCV")
 }
 
 
@@ -61,49 +64,90 @@ plot_heterogen1 <- function(fit_obj, var = 1, ...)
 }
 
 
-plot_interactions1 <- function(fit_obj, var1 = 1, var2 = 2, ...)
+#' Title
+#'
+#' @param fit_obj 
+#' @param var1 
+#' @param var2 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
 {
   stopifnot(var1 != var2)
   col_names <- colnames(fit_obj$scaled_x)
   n <- nrow(fit_obj$scaled_x)
   
-  if (!is.null(dim(fit_obj$coef)))
-  {
-    i_best <- switch(fit_obj$fit_method, 
-                     "svd" = which.min(fit_obj$GCV),
-                     "eigen" = which.min(fit_obj$loocv),
-                     "chol" = which.min(fit_obj$loocv))
-    
-    res <- inters2(x = fit_obj$scaled_x, j1 = var1, j2 = var2, 
-                  c = fit_obj$coef[, i_best], l = fit_obj$l[1])
-    
-  } else {
-    
-    res <- inters2(x = fit_obj$scaled_x, j1 = var1, j2 = var2, 
-                   c = fit_obj$coef, l = fit_obj$l[1])
-  }
+    if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
+    {
+      i_best <- switch(fit_obj$fit_method, 
+                       "svd" = which.min(fit_obj$GCV),
+                       "eigen" = which.min(fit_obj$loocv),
+                       "chol" = which.min(fit_obj$loocv))
+      
+      res <- inters2(x = fit_obj$scaled_x, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef[, i_best], 
+                     l = fit_obj$l[1])
+      
+    } else { # 1 vector
+      
+      res <- inters2(x = fit_obj$scaled_x, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef, 
+                     l = fit_obj$l[1])
+    }
   
-  grid <- cbind.data.frame(x = rep(fit_obj$x[, var1], n), 
-                           y = rep(fit_obj$x[, var2], n))
+  # smooth the interactions
+  x_var1 <- fit_obj$x[, var1]
+  x_var2 <- fit_obj$x[, var2]
+  grid <- cbind.data.frame(x = rep(x_var1, each=n), 
+                           y = rep(x_var2, n))
   grid$z <- res 
+  loess_obj <- loess(z ~ ., data = grid, degree = 2)
   
-  grid <- grid[!is.na(grid$z), ]
+  # predict smoothed interactions on a grid
+  min_x <- min(x_var1); max_x <- max(x_var1)
+  min_y <- min(x_var2); max_y <- max(x_var2)
+  n_out <- 50
+  x_new <- seq(min_x, max_x, length.out = n_out)
+  y_new <- seq(min_y, max_y, length.out = n_out)
   
+  new_grid <- data.frame(x = rep(x_new, each = n_out), 
+                         y = rep(y_new, n_out))
+  
+  preds <- predict(loess_obj, new_grid)
+  
+  # output matrix of smoothed interactions
+  z <- matrix(preds, 
+              nrow = n_out, ncol = n_out, 
+              byrow = TRUE)
+  colnames(z) <- round(y_new, 2)
+  rownames(z) <- round(x_new, 2)
+  
+  # plot stuff
   if (!is.null(col_names))
   {
-    levelplot(z~x*y, data = grid, col.regions = terrain.colors,
-              main = paste("Interactions of \n", col_names[var1], 
-                                     "and", col_names[var2]), 
-              xlab = col_names[var1], ylab = col_names[var2], ...)
+   filled.contour(x = x_new, y = y_new, z = z, 
+                  color = terrain.colors, 
+                  main = paste("smoothed interactions effects \n", 
+                               col_names[var1], "x", col_names[var2]),
+                  xlab = col_names[var1], ylab = col_names[var2]
+                  )
   } else {
-    levelplot(z~x*y, data = grid, col.regions = terrain.colors,
-              main = paste("Interactions of covariate \n", var1, 
-                           "and covariate", var2), 
-              xlab = paste("covariate", var1), 
-              ylab =  paste("covariate", var2), ...)
+    filled.contour(x = x_new, y = y_new, z = z, 
+                   color = terrain.colors, 
+                   main = paste("smoothed interactions effects \n", 
+                                "covariate", var1, "x covariate", var2),
+                   xlab = paste("covariate", var1), 
+                   ylab = paste("covariate", var2))
   }
 
-  #return(grid)
+  # return smoothed grid
+  invisible(z)
 }
 
 

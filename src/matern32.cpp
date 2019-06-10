@@ -232,7 +232,7 @@ NumericVector inters2(NumericMatrix x, // matrix of covariates
     for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
       temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
       r = l2_norm(x(i0, _) - x(k, _));
-      res(i0*n + k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative
+      res(i0*n + k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative // byrow=TRUE
     }
   }
   
