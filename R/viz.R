@@ -165,10 +165,17 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
   # smooth the interactions
   x_var1 <- fit_obj$x[, var1]
   x_var2 <- fit_obj$x[, var2]
-  grid <- cbind.data.frame(x = rep(x_var1, n), 
-                         y = rep(x_var2, n))
+  x_var1_rep <- rep(x_var1, n)
+  x_var2_rep <- rep(x_var2, n)
+  grid <- cbind.data.frame(x = x_var1_rep, 
+                           y = x_var2_rep)
   grid$z <- res 
-  loess_obj <- loess(z ~ ., data = grid, degree = 2)
+  index_na <- !is.na(res)
+  
+  # loess_obj <- loess(z ~ ., data = grid, degree = 2)
+  smooth_obj <- matern32::fit_poly3(X = cbind(x_var1_rep[index_na], 
+                                              x_var2_rep[index_na]), 
+                                    y = grid$z[index_na])
   
   # predict smoothed interactions on a grid
   min_x <- min(x_var1); max_x <- max(x_var1)
@@ -180,7 +187,9 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
   new_grid <- data.frame(x = rep(x_new, each = n_out), 
                          y = rep(y_new, n_out))
   
-  preds <- predict(loess_obj, new_grid)
+  #preds <- predict(loess_obj, new_grid)
+  preds <- matern32::predict_poly3(object = smooth_obj, 
+                                   newx = new_grid)
   
   # output matrix of smoothed interactions
   z <- matrix(preds, 
