@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-plot_coeffs1 <- function(fit_obj)
+plot_coeffs <- function(fit_obj)
 {
   stopifnot(length(fit_obj$lambda) > 1)
   matplot(log(fit_obj$lambda), t(fit_obj$coef), type = 'l', 
@@ -49,7 +49,7 @@ plot_GCV <- function(fit_obj){
 #' @export
 #'
 #' @examples
-plot_heterogen1 <- function(fit_obj, var = 1, ...)
+plot_heterogeneity <- function(fit_obj, var = 1, ...)
 {
   d1 <- derivatives(fit_obj)$`1D`
   col_names <- colnames(fit_obj$scaled_x)
@@ -73,61 +73,6 @@ plot_heterogen1 <- function(fit_obj, var = 1, ...)
 #' Title
 #'
 #' @param fit_obj 
-#' @param var 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-plot_heterogen2 <- function(fit_obj, var = 1)
-{
-  n <- nrow(fit_obj$scaled_x)
-  p <- ncol(fit_obj$scaled_x)
-  i <- 2
-  index <- seq(from = i, to = n^2, by = n)
-  
-  # result for each observation
-  #res <- matrix(0, ncol = 6, nrow = n)
-  res <- matrix(0, ncol = n, nrow = n)
-  
-  if (!is.null(dim(fit_obj$coef)))
-  {
-    i_best <- switch(fit_obj$fit_method, 
-                     "svd" = which.min(fit_obj$GCV),
-                     "eigen" = which.min(fit_obj$loocv),
-                     "chol" = which.min(fit_obj$loocv))
-    
-    fitted_values <- fit_obj$fitted_values[,i_best]
-    residuals <- fit_obj$resid[,i_best]
-  } else {
-    fitted_values <- fit_obj$fitted_values
-    residuals <- fit_obj$resid
-  }
-  
-  d1 <- derivatives(fit_obj)$`1D`
-  
-  while (i <= n)
-  {
-    res[i, ] <- as.numeric(d1[index, var])
-    i <- i + 1
-    index <- seq(from = i, to = n^2, by = n)
-  }
-  
-  x_var <- colnames(fit_obj$scaled_x)[var]
-  
-  matplot(fit_obj$x[ , var], res, type = 'p', pch = 20,
-          main = paste("1st order effects of",  x_var, "\n on response"), 
-          xlab = x_var,
-          ylab = "change for an increase of 1")
-  lines(lowess(x = fit_obj$x[ , var], 
-               y = apply(res, 1, median)))
-}
-
-
-
-#' Title
-#'
-#' @param fit_obj 
 #' @param var1 
 #' @param var2 
 #' @param ... 
@@ -136,31 +81,32 @@ plot_heterogen2 <- function(fit_obj, var = 1)
 #' @export
 #'
 #' @examples
-plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
+plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, 
+                              degree = 3, ...)
 {
   stopifnot(var1 != var2)
   col_names <- colnames(fit_obj$scaled_x)
   n <- nrow(fit_obj$scaled_x)
   
-    if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
-    {
-      i_best <- switch(fit_obj$fit_method, 
-                       "svd" = which.min(fit_obj$GCV),
-                       "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
-      
-      res <- inters2(x = fit_obj$scaled_x, 
-                     j1 = var1, j2 = var2, 
-                     c = fit_obj$coef[, i_best], 
-                     l = fit_obj$l[1])
-      
-    } else { # 1 vector
-      
-      res <- inters2(x = fit_obj$scaled_x, 
-                     j1 = var1, j2 = var2, 
-                     c = fit_obj$coef, 
-                     l = fit_obj$l[1])
-    }
+  if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
+  {
+    i_best <- switch(fit_obj$fit_method, 
+                     "svd" = which.min(fit_obj$GCV),
+                     "eigen" = which.min(fit_obj$loocv),
+                     "chol" = which.min(fit_obj$loocv))
+    
+    res <- inters2(x = fit_obj$scaled_x, 
+                   j1 = var1, j2 = var2, 
+                   c = fit_obj$coef[, i_best], 
+                   l = fit_obj$l[1])
+    
+  } else { # 1 vector
+    
+    res <- inters2(x = fit_obj$scaled_x, 
+                   j1 = var1, j2 = var2, 
+                   c = fit_obj$coef, 
+                   l = fit_obj$l[1])
+  }
   
   # smooth the interactions
   x_var1 <- fit_obj$x[, var1]
@@ -173,14 +119,21 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
   index_na <- !is.na(res)
   
   # loess_obj <- loess(z ~ ., data = grid, degree = 2)
-  smooth_obj <- matern32::fit_poly3(X = cbind(x_var1_rep[index_na], 
-                                              x_var2_rep[index_na]), 
-                                    y = grid$z[index_na])
+  if (degree == 3)
+  {
+    smooth_obj <- matern32::fit_poly3(X = cbind(x_var1_rep[index_na], 
+                                                x_var2_rep[index_na]), 
+                                      y = grid$z[index_na]) 
+  } else {
+    smooth_obj <- matern32::fit_poly2(X = cbind(x_var1_rep[index_na], 
+                                                x_var2_rep[index_na]), 
+                                      y = grid$z[index_na]) 
+  }
   
   # predict smoothed interactions on a grid
   min_x <- min(x_var1); max_x <- max(x_var1)
   min_y <- min(x_var2); max_y <- max(x_var2)
-  n_out <- 25
+  n_out <- 10
   x_new <- seq(min_x, max_x, length.out = n_out)
   y_new <- seq(min_y, max_y, length.out = n_out)
   
@@ -188,8 +141,14 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
                          y = rep(y_new, n_out))
   
   #preds <- predict(loess_obj, new_grid)
-  preds <- matern32::predict_poly3(object = smooth_obj, 
+  if (degree == 3)
+  {
+    preds <- matern32::predict_poly3(object = smooth_obj, 
                                    newx = new_grid)
+  } else {
+    preds <- matern32::predict_poly2(object = smooth_obj, 
+                                     newx = new_grid)
+  }
   
   # output matrix of smoothed interactions
   z <- matrix(preds, 
@@ -201,12 +160,12 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
   # plot stuff
   if (!is.null(col_names))
   {
-   filled.contour(x = x_new, y = y_new, z = z, 
-                  color = terrain.colors, 
-                  main = paste("smoothed interactions effects \n", 
-                               col_names[var1], "x", col_names[var2]),
-                  xlab = col_names[var1], ylab = col_names[var2]
-                  )
+    filled.contour(x = x_new, y = y_new, z = z, 
+                   color = terrain.colors, 
+                   main = paste("smoothed interactions effects \n", 
+                                col_names[var1], "x", col_names[var2]),
+                   xlab = col_names[var1], ylab = col_names[var2]
+    )
   } else {
     filled.contour(x = x_new, y = y_new, z = z, 
                    color = terrain.colors, 
@@ -215,14 +174,10 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, ...)
                    xlab = paste("covariate", var1), 
                    ylab = paste("covariate", var2))
   }
-
+  
   # return smoothed grid
   invisible(z)
 }
-
-
-
-
 
 
 #' Plot residuals
@@ -260,3 +215,56 @@ plot_residuals <- function(fit_obj)
   abline(h = 0, col = "red")
   
 }
+
+#' Title
+#'
+#' @param fit_obj 
+#' @param var 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+# plot_heterogen2 <- function(fit_obj, var = 1)
+# {
+#   n <- nrow(fit_obj$scaled_x)
+#   p <- ncol(fit_obj$scaled_x)
+#   i <- 2
+#   index <- seq(from = i, to = n^2, by = n)
+#   
+#   # result for each observation
+#   #res <- matrix(0, ncol = 6, nrow = n)
+#   res <- matrix(0, ncol = n, nrow = n)
+#   
+#   if (!is.null(dim(fit_obj$coef)))
+#   {
+#     i_best <- switch(fit_obj$fit_method, 
+#                      "svd" = which.min(fit_obj$GCV),
+#                      "eigen" = which.min(fit_obj$loocv),
+#                      "chol" = which.min(fit_obj$loocv))
+#     
+#     fitted_values <- fit_obj$fitted_values[,i_best]
+#     residuals <- fit_obj$resid[,i_best]
+#   } else {
+#     fitted_values <- fit_obj$fitted_values
+#     residuals <- fit_obj$resid
+#   }
+#   
+#   d1 <- derivatives(fit_obj)$`1D`
+#   
+#   while (i <= n)
+#   {
+#     res[i, ] <- as.numeric(d1[index, var])
+#     i <- i + 1
+#     index <- seq(from = i, to = n^2, by = n)
+#   }
+#   
+#   x_var <- colnames(fit_obj$scaled_x)[var]
+#   
+#   matplot(fit_obj$x[ , var], res, type = 'p', pch = 20,
+#           main = paste("1st order effects of",  x_var, "\n on response"), 
+#           xlab = x_var,
+#           ylab = "change for an increase of 1")
+#   lines(lowess(x = fit_obj$x[ , var], 
+#                y = apply(res, 1, median)))
+# }
