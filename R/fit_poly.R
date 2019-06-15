@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-fit_poly2 <- function(X, y)
+fit_poly <- function(X, y, degree = 1)
 {
   stopifnot(dim(X)[2] == 2)
   ym <- mean(y)
@@ -20,10 +20,27 @@ fit_poly2 <- function(X, y)
   centered_y <- y - ym
   x1 <- scaled_X[,1]
   x2 <- scaled_X[,2]
-  XX <- cbind(scaled_X, scaled_X^2, 
-              x1*x2)
   
-  return(list(fit_obj = .lm.fit(x = XX, y = centered_y), 
+  if (degree == 1)
+  {
+    XX <- cbind(scaled_X, x1*x2)
+  }
+  
+  if (degree == 2)
+  {
+    XX <- cbind(scaled_X, scaled_X^2, 
+          x1*x2)
+  }
+  
+  if (degree == 3)
+  {
+    XX <- cbind(scaled_X, scaled_X^2, scaled_X^3, 
+          x1*x2, x1*(x2^2), (x1^2)*x2, 
+          (x1^2)*(x2^2))
+  }
+  
+  return(list(fit_obj = list(coefficients = MASS::ginv(XX)%*%centered_y, 
+                             degree = degree), 
               ym = ym, xm = xm))
 }
 
@@ -37,14 +54,32 @@ fit_poly2 <- function(X, y)
 #' @export
 #'
 #' @examples
-predict_poly2 <- function(object, newx)
+predict_poly <- function(object, newx)
 {
   stopifnot(dim(newx)[2] == 2)
   rescaled_X <- as.matrix(my_scale(newx, xm = object$xm))
   x1 <- rescaled_X[,1]
   x2 <- rescaled_X[,2]
-  XX <- cbind(rescaled_X, rescaled_X^2, 
-              x1*x2)
+  
+  degree <- object$fit_obj$degree
+  
+  if (degree == 1)
+  {
+    XX <- cbind(rescaled_X, x1*x2)
+  }
+  
+  if (degree == 2)
+  {
+    XX <- cbind(rescaled_X, rescaled_X^2, 
+          x1*x2) 
+  }
+  
+  if (degree == 3)
+  {
+    XX <- cbind(rescaled_X, rescaled_X^2, rescaled_X^3, 
+          x1*x2, x1*(x2^2), (x1^2)*x2, 
+          (x1^2)*(x2^2))
+  }
   
   return(drop(object$ym + XX%*%as.numeric(object$fit_obj$coefficients)))
 }

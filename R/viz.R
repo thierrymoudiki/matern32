@@ -82,7 +82,7 @@ plot_heterogeneity <- function(fit_obj, var = 1, ...)
 #'
 #' @examples
 plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, 
-                              degree = 3, ...)
+                              degree = 1, ...)
 {
   stopifnot(var1 != var2)
   col_names <- colnames(fit_obj$scaled_x)
@@ -121,13 +121,26 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   # loess_obj <- loess(z ~ ., data = grid, degree = 2)
   if (degree == 3)
   {
-    smooth_obj <- matern32::fit_poly3(X = cbind(x_var1_rep[index_na], 
+    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
                                                 x_var2_rep[index_na]), 
-                                      y = grid$z[index_na]) 
-  } else {
-    smooth_obj <- matern32::fit_poly2(X = cbind(x_var1_rep[index_na], 
+                                      y = grid$z[index_na], 
+                                     degree = degree) 
+  } 
+  
+  if (degree == 2)
+  {
+    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
                                                 x_var2_rep[index_na]), 
-                                      y = grid$z[index_na]) 
+                                      y = grid$z[index_na], 
+                                     degree = degree) 
+  }
+  
+  if (degree == 1)
+  {
+    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
+                                                x_var2_rep[index_na]), 
+                                      y = grid$z[index_na], 
+                                     degree = degree) 
   }
   
   # predict smoothed interactions on a grid
@@ -140,15 +153,8 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   new_grid <- data.frame(x = rep(x_new, each = n_out), 
                          y = rep(y_new, n_out))
   
-  #preds <- predict(loess_obj, new_grid)
-  if (degree == 3)
-  {
-    preds <- matern32::predict_poly3(object = smooth_obj, 
-                                   newx = new_grid)
-  } else {
-    preds <- matern32::predict_poly2(object = smooth_obj, 
+  preds <- matern32::predict_poly(object = smooth_obj, 
                                      newx = new_grid)
-  }
   
   # output matrix of smoothed interactions
   z <- matrix(preds, 
