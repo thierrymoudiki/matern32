@@ -50,7 +50,7 @@
 #' 
 fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                          l = NULL, method = c("svd", "chol", "eigen"),
-                         ...)
+                         with_kmeans = FALSE, seed = 123, cl = NULL, ...)
 {
   method <- match.arg(method)
   
@@ -80,7 +80,31 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   K <- matern32_kxx_cpp(x = X, l = l) 
   
   if(n > 500)
-    cat("Processing...", "\n")
+  {
+    if (with_kmeans)
+    {
+      # find best k in kmeans if 'cl' is NULL
+      # use cclust::cclust
+      # what is the response y for each center? mean of y on the cluster obs? 
+      # adjust KRR to centers and this new response
+      if (is.null(cl))
+      {
+        k <- 2 
+      } else {
+        k <- 2 
+      }
+      
+      set.seed(seed)
+      cclust_obj <- cclust::cclust(as.matrix(X), centers = k)  
+    } else{
+      cat("Processing... (try using option 'with_kmeans')", "\n") 
+    }
+  } else {
+    if (with_kmeans)
+    {
+      warning("'kmeans' is not required here, but for nrow(x) > 500")
+    }
+  }
   
   if (method == "svd")
   {
