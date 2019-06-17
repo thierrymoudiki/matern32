@@ -31,6 +31,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     loocv <- fit_obj$loocv[index_lam]
   }
   
+  
   if (!is.null(ncol(fit_obj$coef))) # multiple lambdas 
   {
     R_Squared <- fit_obj$R_Squared[index_lam]

@@ -13,11 +13,18 @@ inters2 <- memoise::memoize(inters2)
 #' @examples
 derivatives <- function(fit_obj, obs = NULL)
 {
-  n <- nrow(fit_obj$scaled_x)
-  
-  if(n > 500)
-    cat("Processing...", "\n")
-  
+  if (!is.null(fit_obj$with_kmeans))
+  {
+    n <- nrow(fit_obj$scaled_x)
+    
+    cat("dim(fit_obj$coef)", "\n")
+    print(dim(fit_obj$coef))
+    cat("dim(fit_obj$scaled_x)", "\n")
+    print(dim(fit_obj$scaled_x))
+    
+    if(n > 500)
+      cat("Processing...", "\n")
+    
     if (!is.null(dim(fit_obj$coef)))
     {
       i_best <- switch(fit_obj$fit_method, 
@@ -33,39 +40,42 @@ derivatives <- function(fit_obj, obs = NULL)
                     c = fit_obj$coef, 
                     l = fit_obj$l[1])
     }
-  
-  if (is.null(obs)) # all the observations
-  {
-    col_names_x <- colnames(fit_obj$scaled_x)
     
-    if (!is.null(col_names_x))  
-      colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
-  
-    rownames(res[[1]]) <- rownames(res[[2]]) <- paste(rep(1:n, each = n),
-                                                      rep(1:n), sep = ".")
+    if (is.null(obs)) # all the observations
+    {
+      col_names_x <- colnames(fit_obj$scaled_x)
+      
+      if (!is.null(col_names_x))  
+        colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
+      
+      rownames(res[[1]]) <- rownames(res[[2]]) <- paste(rep(1:n, each = n),
+                                                        rep(1:n), sep = ".")
+      
+      names(res) <- c("1D", "2D")
+      
+      return(res)
+      
+    } else { # one observation
+      
+      stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
+      upper_bound <- n*obs
+      lower_bound <- n*obs - n + 1
+      res <- list(res[[1]][lower_bound:upper_bound, ], 
+                  res[[2]][lower_bound:upper_bound, ])
+      
+      col_names_x <- colnames(fit_obj$scaled_x)
+      
+      if (!is.null(col_names_x))  
+        colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
+      
+      rownames(res[[1]]) <- rownames(res[[2]]) <- seq(1, n, by = 1)
+      
+      names(res) <- c("1D", "2D")
+      
+      return(res)
+    }
+  } else {
     
-    names(res) <- c("1D", "2D")
-    
-    return(res)
-    
-  } else { # one observation
-    
-    stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
-    upper_bound <- n*obs
-    lower_bound <- n*obs - n + 1
-    res <- list(res[[1]][lower_bound:upper_bound, ], 
-                res[[2]][lower_bound:upper_bound, ])
-    
-    col_names_x <- colnames(fit_obj$scaled_x)
-    
-    if (!is.null(col_names_x))  
-      colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
-    
-    rownames(res[[1]]) <- rownames(res[[2]]) <- seq(1, n, by = 1)
-    
-    names(res) <- c("1D", "2D")
-    
-    return(res)
   }
 }
 derivatives <- memoise::memoize(derivatives)
