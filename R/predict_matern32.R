@@ -31,12 +31,27 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
   if (is.vector(newx))
     newx <- t(newx)
   
-  K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
-                                                                    xm = as.vector(fit_obj$xm),
-                                                                    xsd = as.vector(fit_obj$scales))), 
-                                x = fit_obj$scaled_x, 
-                                l = fit_obj$l)
+  if (!is.null(fit_obj$with_kmeans))
+  {
+    K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                      xm = as.vector(fit_obj$xm),
+                                                                      xsd = as.vector(fit_obj$scales))), 
+                                  x = fit_obj$X_clust, 
+                                  l = fit_obj$l)
+    
+    return(drop(crossprod(K_star%*%fit_obj$coef)) + fit_obj$ym)
+    
+  } else {
+    
+    K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                      xm = as.vector(fit_obj$xm),
+                                                                      xsd = as.vector(fit_obj$scales))), 
+                                  x = fit_obj$scaled_x, 
+                                  l = fit_obj$l)
+    
+    return(drop(crossprod(K_star, fit_obj$coef)) + fit_obj$ym)
+    
+  }
   
-  return(drop(crossprod(K_star, fit_obj$coef)) + fit_obj$ym)
 }
 predict_matern32 <- memoise::memoize(predict_matern32)
