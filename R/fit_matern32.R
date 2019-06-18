@@ -77,50 +77,43 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   # compute kernel as a vector if necessary
   if (length(l) == 1)
     l <- rep(l, p)
-
-  if (with_kmeans == FALSE)
+  
+  if (with_kmeans == FALSE) 
     K <- matern32_kxx_cpp(x = X, l = l)  
   
-  if(n > 500)
+  if(n > 500) # can use kmeans
   {
-    
     if (with_kmeans == TRUE)
     {
-      
       # adjust KRR to centers = X and this new response = y
       if (is.null(centers))
       {
         # find best k in kmeans if 'cl' is NULL
         # see https://uc-r.github.io/kmeans_clustering#optimal (fastest hun?! :D) 
+        stop("'centers' not provided: choose best k in kmeans")
         centers <- 2 
-        
       } else { #is.null(centers) == FALSE
-        
         # fitted values, residuals, etc => predict on entire dataset from reduced kernel 
         set.seed(seed)
         cclust_obj <- cclust::cclust(x = as.matrix(X), 
                                      centers = centers)
-        
         # new training set (X_clust, y_clust)
         X_clust <- as.matrix(cclust_obj$centers)
-        
         centered_y_clust <- sapply(1:centers, 
-                          function(i) mean(centered_y[which(cclust_obj$cluster == i)]))
-        
+                                   function(i) mean(centered_y[which(cclust_obj$cluster == i)]))
         K <- matern32_kxx_cpp(x = X_clust, l = l)  
       }
       
     } else { # with_kmeans == FALSE
-      
       cat("Processing... (try using option 'with_kmeans')", "\n") 
-      
     }
     
-  } else {
+  } else { # if (n <= 500)
     
     if (with_kmeans == TRUE)
     {
-      warning("option 'with_kmeans' not used for n_obs < 500")
+      warning("option 'with_kmeans' not implemented for n_obs <= 500")
+    } else {
       K <- matern32_kxx_cpp(x = X, l = l)  
     }
     
@@ -128,7 +121,6 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   
   if (with_kmeans == FALSE)
   {
-    
     if (method == "svd")
     {
       Xs <- La.svd(K)
@@ -299,61 +291,68 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     
   } else { # with_kmeans == TRUE
     
-    if (method %in% c("chol", "eigen"))
-      stop("'method' not implemented")
-    
-    if (method == "svd")
+    if (n > 500)
     {
-      Xs <- La.svd(K) # K is based on clustered X 
-      rhs <- crossprod(Xs$u, centered_y_clust)
-      d <- Xs$d
-      nb_di <- length(d)
-      div <- d ^ 2 + rep(lambda, rep(nb_di, nlambda))
-      a <- drop(d * rhs) / div
-      dim(a) <- c(nb_di, nlambda)
-      coef <- crossprod(Xs$vt, a)
-      colnames(coef) <- lambda
-      scales <- x_scaled$xsd
-      xm <- x_scaled$xm
       
-      K_star <- matern32_kxstar_cpp(newx = X, # X is already scaled
-                                    x = X_clust, 
-                                    l = l)
+      if (method %in% c("chol", "eigen"))
+        stop("'method' not implemented")
       
-      centered_y_hat <- K_star%*%coef 
-      fitted_values <- drop(ym + centered_y_hat)
-      resid <- centered_y - centered_y_hat
-      colnames(resid) <- lambda
-      GCV <- colSums(resid^2)/(nrow(X) - colSums(matrix(d^2/div, 
-                                                        nb_di)))^2
-      
-      if (length(lambda) > 1)
+      if (method == "svd")
       {
-        RSS <- colSums((y - fitted_values)^2)
-      } else {
-        RSS <- sum((y - fitted_values)^2)
+        Xs <- La.svd(K) # K is based on clustered X 
+        rhs <- crossprod(Xs$u, centered_y_clust)
+        d <- Xs$d
+        nb_di <- length(d)
+        div <- d ^ 2 + rep(lambda, rep(nb_di, nlambda))
+        a <- drop(d * rhs) / div
+        dim(a) <- c(nb_di, nlambda)
+        coef <- crossprod(Xs$vt, a)
+        colnames(coef) <- lambda
+        scales <- x_scaled$xsd
+        xm <- x_scaled$xm
+        
+        K_star <- matern32_kxstar_cpp(newx = X, # X is already scaled
+                                      x = X_clust, 
+                                      l = l)
+        
+        centered_y_hat <- K_star%*%coef 
+        fitted_values <- drop(ym + centered_y_hat)
+        resid <- centered_y - centered_y_hat
+        colnames(resid) <- lambda
+        GCV <- colSums(resid^2)/(nrow(X) - colSums(matrix(d^2/div, 
+                                                          nb_di)))^2
+        
+        if (length(lambda) > 1)
+        {
+          RSS <- colSums((y - fitted_values)^2)
+        } else {
+          RSS <- sum((y - fitted_values)^2)
+        }
+        
+        TSS <- sum((y - ym)^2)
+        R_Squared <- 1 - RSS/TSS
+        names(R_Squared) <- lambda
+        
+        res <- list(K = K, l = l, 
+                    lambda = lambda,
+                    coef = drop(coef), scales = scales,
+                    ym = ym, xm = xm,
+                    fitted_values = fitted_values, resid = resid,
+                    GCV = GCV, R_Squared = R_Squared, 
+                    scaled_x = X, x = x, 
+                    with_kmeans = TRUE,
+                    cclust_obj = cclust_obj, 
+                    X_clust = X_clust, 
+                    centered_y = centered_y, 
+                    fit_method = method)
+        
+        class(res) <- "matern32"
+        
+        return(res)
       }
       
-      TSS <- sum((y - ym)^2)
-      R_Squared <- 1 - RSS/TSS
-      names(R_Squared) <- lambda
-      
-      res <- list(K = K, l = l, 
-                  lambda = lambda,
-                  coef = drop(coef), scales = scales,
-                  ym = ym, xm = xm,
-                  fitted_values = fitted_values, resid = resid,
-                  GCV = GCV, R_Squared = R_Squared, 
-                  scaled_x = X, x = x, 
-                  with_kmeans = TRUE,
-                  cclust_obj = cclust_obj, 
-                  X_clust = X_clust, 
-                  centered_y = centered_y, 
-                  fit_method = method)
-      
-      class(res) <- "matern32"
-      
-      return(res)
+    } else {
+      warning("option 'with_kmeans' not implemented for n_obs <= 500")
     }
     
   }

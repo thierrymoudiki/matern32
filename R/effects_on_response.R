@@ -142,12 +142,15 @@ derivatives <- memoise::memoize(derivatives)
 #' @export
 #'
 #' @examples
-interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
+interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
 {
-  n <- nrow(fit_obj$scaled_x)
-  p <- ncol(fit_obj$scaled_x)
-  l <- sqrt(p)
   
+  if (is.null(fit_obj$with_kmeans))
+  {
+    n <- nrow(fit_obj$scaled_x)
+    p <- ncol(fit_obj$scaled_x)
+    l <- sqrt(p)
+    
     if (!is.null(dim(fit_obj$coef)))
     {
       i_best <- switch(fit_obj$fit_method, 
@@ -167,7 +170,7 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
                                   seq(1, n), sep = ".")
     rownames(res_inters) <- paste(seq(1, n),
                                   rep(1, n), sep = ".")
-  
+    
     if (is.null(obs)) # for all the observations 
     {
       if (!is.null(colnames(fit_obj$scaled_x)))
@@ -192,5 +195,58 @@ interactions <- function(fit_obj, index_col1, index_col2, obs = NULL)
       print(summary(as.vector(res_inters[obs, ])))
       return(invisible(res_inters[obs, ])) 
     }
+  } else { # is.null(with_kmeans) == FALSE
+    
+    n <- nrow(fit_obj$X_clust)
+    p <- ncol(fit_obj$X_clust)
+    l <- sqrt(p)
+    
+    if (!is.null(dim(fit_obj$coef)))
+    {
+      i_best <- switch(fit_obj$fit_method, 
+                       "svd" = which.min(fit_obj$GCV),
+                       "eigen" = which.min(fit_obj$loocv),
+                       "chol" = which.min(fit_obj$loocv))
+      
+      res_inters <- inters(x = as.matrix(fit_obj$X_clust), j1 = index_col1,
+                           j2 = index_col2, c = fit_obj$coef[ , i_best], 
+                           l = l)
+    } else {
+      res_inters <- inters(x = as.matrix(fit_obj$X_clust), j1 = index_col1,
+                           j2 = index_col2, c = fit_obj$coef, 
+                           l = l)
+    }
+    colnames(res_inters) <- paste(rep(1, n),
+                                  seq(1, n), sep = ".")
+    rownames(res_inters) <- paste(seq(1, n),
+                                  rep(1, n), sep = ".")
+    
+    if (is.null(obs)) # for all the observations 
+    {
+      if (!is.null(colnames(fit_obj$X_clust)))
+      {
+        col_names <- colnames(fit_obj$X_clust)
+        cat("Interaction effects between", col_names[index_col1],
+            " and ", col_names[index_col2], ":\n") 
+      }
+      
+      print(summary(as.vector(res_inters)))
+      return(invisible(res_inters)) 
+    } else { # for one observation
+      
+      stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
+      if (!is.null(colnames(fit_obj$X_clust)))
+      {
+        col_names <- colnames(fit_obj$X_clust)
+        cat("Interaction effects between", col_names[index_col1],
+            " and ", col_names[index_col2], "for observation #", obs, ":\n") 
+      }
+      
+      print(summary(as.vector(res_inters[obs, ])))
+      return(invisible(res_inters[obs, ])) 
+    }
+    
+  }
+
 }
 interactions <- memoise::memoize(interactions)

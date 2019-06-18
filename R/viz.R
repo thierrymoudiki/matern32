@@ -84,64 +84,84 @@ plot_heterogeneity <- function(fit_obj, var = 1, ...)
 plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, 
                               degree = 1, ...)
 {
-  stopifnot(var1 != var2)
-  col_names <- colnames(fit_obj$scaled_x)
-  n <- nrow(fit_obj$scaled_x)
   
-  if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
+  if (is.null(fit_obj$with_kmeans))
   {
-    i_best <- switch(fit_obj$fit_method, 
-                     "svd" = which.min(fit_obj$GCV),
-                     "eigen" = which.min(fit_obj$loocv),
-                     "chol" = which.min(fit_obj$loocv))
+    stopifnot(var1 != var2)
+    col_names <- colnames(fit_obj$scaled_x)
+    n <- nrow(fit_obj$scaled_x)
     
-    res <- inters2(x = fit_obj$scaled_x, 
-                   j1 = var1, j2 = var2, 
-                   c = fit_obj$coef[, i_best], 
-                   l = fit_obj$l[1])
+    if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
+    {
+      i_best <- switch(fit_obj$fit_method, 
+                       "svd" = which.min(fit_obj$GCV),
+                       "eigen" = which.min(fit_obj$loocv),
+                       "chol" = which.min(fit_obj$loocv))
+      
+      res <- inters2(x = fit_obj$scaled_x, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef[, i_best], 
+                     l = fit_obj$l[1])
+      
+    } else { # 1 vector
+      
+      res <- inters2(x = fit_obj$scaled_x, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef, 
+                     l = fit_obj$l[1])
+    }
     
-  } else { # 1 vector
+    # smooth the interactions
+    x_var1 <- fit_obj$x[, var1]
+    x_var2 <- fit_obj$x[, var2]
     
-    res <- inters2(x = fit_obj$scaled_x, 
-                   j1 = var1, j2 = var2, 
-                   c = fit_obj$coef, 
-                   l = fit_obj$l[1])
+  } else { #is.null(fit_obj$with_kmeans) == FALSE
+    
+    stopifnot(var1 != var2)
+    col_names <- colnames(fit_obj$X_clust)
+    n <- nrow(fit_obj$X_clust)
+    
+    if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
+    {
+      i_best <- switch(fit_obj$fit_method, 
+                       "svd" = which.min(fit_obj$GCV),
+                       "eigen" = which.min(fit_obj$loocv),
+                       "chol" = which.min(fit_obj$loocv))
+      
+      res <- inters2(x = fit_obj$X_clust, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef[, i_best], 
+                     l = fit_obj$l[1])
+      
+    } else { # 1 vector
+      
+      res <- inters2(x = fit_obj$X_clust, 
+                     j1 = var1, j2 = var2, 
+                     c = fit_obj$coef, 
+                     l = fit_obj$l[1])
+    }
+    
+    # smooth the interactions
+    rep_1_n <- rep(1, n)
+    rescaled_x <- fit_obj$X_clust*tcrossprod(rep_1_n, fit_obj$scales) + tcrossprod(rep_1_n, fit_obj$xm)
+    x_var1 <- rescaled_x[, var1]
+    x_var2 <- rescaled_x[, var2]
+    
   }
   
-  # smooth the interactions
-  x_var1 <- fit_obj$x[, var1]
-  x_var2 <- fit_obj$x[, var2]
   x_var1_rep <- rep(x_var1, n)
   x_var2_rep <- rep(x_var2, n)
+  
   grid <- cbind.data.frame(x = x_var1_rep, 
                            y = x_var2_rep)
+  
   grid$z <- res 
   index_na <- !is.na(res)
-  
-  # loess_obj <- loess(z ~ ., data = grid, degree = 2)
-  if (degree == 3)
-  {
-    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
-                                                x_var2_rep[index_na]), 
-                                      y = grid$z[index_na], 
-                                     degree = degree) 
-  } 
-  
-  if (degree == 2)
-  {
-    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
-                                                x_var2_rep[index_na]), 
-                                      y = grid$z[index_na], 
-                                     degree = degree) 
-  }
-  
-  if (degree == 1)
-  {
-    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
-                                                x_var2_rep[index_na]), 
-                                      y = grid$z[index_na], 
-                                     degree = degree) 
-  }
+
+  smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
+                                             x_var2_rep[index_na]), 
+                                   y = grid$z[index_na], 
+                                   degree = degree) 
   
   # predict smoothed interactions on a grid
   min_x <- min(x_var1); max_x <- max(x_var1)
@@ -154,7 +174,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
                          y = rep(y_new, n_out))
   
   preds <- matern32::predict_poly(object = smooth_obj, 
-                                     newx = new_grid)
+                                  newx = new_grid)
   
   # output matrix of smoothed interactions
   z <- matrix(preds, 
@@ -183,6 +203,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   
   # return smoothed grid
   invisible(z)
+  
 }
 
 
