@@ -105,7 +105,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         X_clust <- as.matrix(cclust_obj$centers)
         
         centered_y_clust <- sapply(1:centers, 
-                          function(i) median(centered_y[which(cclust_obj$cluster == i)]))
+                          function(i) mean(centered_y[which(cclust_obj$cluster == i)]))
         
         K <- matern32_kxx_cpp(x = X_clust, l = l)  
       }
@@ -316,9 +316,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       scales <- x_scaled$xsd
       xm <- x_scaled$xm
       
-      K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = X,
-                                                                        xm = as.vector(xm),
-                                                                        xsd = as.vector(scales))), 
+      K_star <- matern32_kxstar_cpp(newx = X, # X is already scaled
                                     x = X_clust, 
                                     l = l)
       
