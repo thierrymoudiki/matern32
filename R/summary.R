@@ -35,12 +35,14 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
   if (!is.null(ncol(fit_obj$coef))) # multiple lambdas 
   {
     R_Squared <- fit_obj$R_Squared[index_lam]
+    Adj_R_Squared <- fit_obj$Adj_R_Squared[index_lam]
     residuals <- fit_obj$resid[ , index_lam]
     best_lam <- fit_obj$lambda[index_lam]
     
   } else { # one lambda
     
     R_Squared <- fit_obj$R_Squared
+    Adj_R_Squared <- fit_obj$Adj_R_Squared
     residuals <- fit_obj$resid
     best_lam <- fit_obj$lambda
   }
@@ -123,7 +125,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     cat("Distribution of marginal effects: ", "\n")
     print(distro_effects)
     cat("\n")
-    cat("Multiple R-squared:  ", R_Squared, "\n")
+    cat("Multiple R-squared:  ", R_Squared, "	Adjusted R-squared:", Adj_R_Squared,"\n")
   }
   
   if(!is.null(fit_obj$GCV))
@@ -134,6 +136,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     return(invisible(list(coefficients = coefficients, 
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),
+                          Adj_R_Squared = as.numeric(fit_obj$Adj_R_Squared),
                           GCV = as.numeric(GCV), 
                           best_lam = as.numeric(best_lam))))
   } else {
@@ -143,6 +146,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     return(invisible(list(coefficients = coefficients, 
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),
+                          Adj_R_Squared = as.numeric(fit_obj$Adj_R_Squared),
                           loocv = as.numeric(loocv), 
                           best_lam = as.numeric(best_lam))))
   }

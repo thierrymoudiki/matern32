@@ -162,6 +162,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       TSS <- sum((y - ym)^2)
       R_Squared <- 1 - RSS/TSS
       names(R_Squared) <- lambda
+      Adj_R_Squared <- 1 - (1 - R_Squared)*((n - 1)/(n - p - 1))
       
       res <- list(K = K, l = l, 
                   lambda = lambda,
@@ -169,6 +170,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                   ym = ym, xm = x_scaled$xm,
                   fitted_values = fitted_values, resid = resid,
                   GCV = GCV, R_Squared = R_Squared, 
+                  Adj_R_Squared = Adj_R_Squared,
                   scaled_x = X, x = x, centered_y = centered_y, 
                   fit_method = method)
       
@@ -261,6 +263,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         RSS <- sum((y - fitted_values)^2)
         TSS <- sum((y - ym)^2)
         R_Squared <- 1 - RSS/TSS
+        Adj_R_Squared <- 1 - (1 - R_Squared)*((n - 1)/(n - p - 1))
         
         res <- list(K = K, l = l, 
                     lambda = lambda,
@@ -269,6 +272,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                     ym = ym, xm = x_scaled$xm,
                     fitted_values = fitted_values, resid = drop(resid),
                     loocv = loocv, R_Squared = R_Squared, 
+                    Adj_R_Squared = Adj_R_Squared, 
                     scaled_x = X, centered_y = centered_y, 
                     fit_method = method)
         
@@ -284,6 +288,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         TSS <- sum((y - ym)^2)
         R_Squared <- 1 - RSS/TSS
         names(R_Squared) <- lambda
+        Adj_R_Squared <- 1 - (1 - R_Squared)*((n - 1)/(n - p - 1))
         
         res <- list(K = K, l = l, 
                     lambda = lambda,
@@ -292,6 +297,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                     ym = ym, xm = x_scaled$xm,
                     fitted_values = fitted_values, resid = resid,
                     loocv = loocv, R_Squared = R_Squared, 
+                    Adj_R_Squared = Adj_R_Squared, 
                     scaled_x = X, centered_y = centered_y, 
                     fit_method = method)
         
@@ -343,6 +349,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         
         TSS <- sum((y - ym)^2)
         R_Squared <- 1 - RSS/TSS
+        Adj_R_Squared <- 1 - (1 - R_Squared)*((n - 1)/(n - p - 1))
         names(R_Squared) <- lambda
         
         res <- list(K = K, l = l, 
@@ -351,6 +358,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                     ym = ym, xm = xm,
                     fitted_values = fitted_values, resid = resid,
                     GCV = GCV, R_Squared = R_Squared, 
+                    Adj_R_Squared = Adj_R_Squared,
                     scaled_x = X, x = x, 
                     with_kmeans = TRUE,
                     cclust_obj = cclust_obj, 
