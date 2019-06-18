@@ -71,7 +71,7 @@ derivatives <- function(fit_obj, obs = NULL)
     }
   } else { # is.null(fit_obj$with_kmeans) == FALSE
     
-    n <- nrow(fit_obj$X_clust)
+    n <- nrow(fit_obj$scaled_x_clust)
     
     if(n > 500)
       cat("Processing...", "\n")
@@ -83,18 +83,18 @@ derivatives <- function(fit_obj, obs = NULL)
                        "eigen" = which.min(fit_obj$loocv),
                        "chol" = which.min(fit_obj$loocv))
       
-      res <- derivs(x = fit_obj$X_clust, 
+      res <- derivs(x = fit_obj$scaled_x_clust, 
                     c = fit_obj$coef[, i_best], 
                     l = fit_obj$l[1])
     } else {
-      res <- derivs(x = fit_obj$X_clust, 
+      res <- derivs(x = fit_obj$scaled_x_clust, 
                     c = fit_obj$coef, 
                     l = fit_obj$l[1])
     }
     
     if (is.null(obs)) # all the observations
     {
-      col_names_x <- colnames(fit_obj$X_clust)
+      col_names_x <- colnames(fit_obj$scaled_x_clust)
       
       if (!is.null(col_names_x))  
         colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
@@ -114,7 +114,7 @@ derivatives <- function(fit_obj, obs = NULL)
       res <- list(res[[1]][lower_bound:upper_bound, ], 
                   res[[2]][lower_bound:upper_bound, ])
       
-      col_names_x <- colnames(fit_obj$X_clust)
+      col_names_x <- colnames(fit_obj$scaled_x_clust)
       
       if (!is.null(col_names_x))  
         colnames(res[[1]]) <- colnames(res[[2]]) <- col_names_x
@@ -197,8 +197,8 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
     }
   } else { # is.null(with_kmeans) == FALSE
     
-    n <- nrow(fit_obj$X_clust)
-    p <- ncol(fit_obj$X_clust)
+    n <- nrow(fit_obj$scaled_x_clust)
+    p <- ncol(fit_obj$scaled_x_clust)
     l <- sqrt(p)
     
     if (!is.null(dim(fit_obj$coef)))
@@ -208,11 +208,11 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
                        "eigen" = which.min(fit_obj$loocv),
                        "chol" = which.min(fit_obj$loocv))
       
-      res_inters <- inters(x = as.matrix(fit_obj$X_clust), j1 = index_col1,
+      res_inters <- inters(x = as.matrix(fit_obj$scaled_x_clust), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef[ , i_best], 
                            l = l)
     } else {
-      res_inters <- inters(x = as.matrix(fit_obj$X_clust), j1 = index_col1,
+      res_inters <- inters(x = as.matrix(fit_obj$scaled_x_clust), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef, 
                            l = l)
     }
@@ -223,9 +223,9 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
     
     if (is.null(obs)) # for all the observations 
     {
-      if (!is.null(colnames(fit_obj$X_clust)))
+      if (!is.null(colnames(fit_obj$scaled_x_clust)))
       {
-        col_names <- colnames(fit_obj$X_clust)
+        col_names <- colnames(fit_obj$scaled_x_clust)
         cat("Interaction effects between", col_names[index_col1],
             " and ", col_names[index_col2], ":\n") 
       }
@@ -235,9 +235,9 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
     } else { # for one observation
       
       stopifnot(obs >= 1 && obs <= n && floor(obs) == obs)
-      if (!is.null(colnames(fit_obj$X_clust)))
+      if (!is.null(colnames(fit_obj$scaled_x_clust)))
       {
-        col_names <- colnames(fit_obj$X_clust)
+        col_names <- colnames(fit_obj$scaled_x_clust)
         cat("Interaction effects between", col_names[index_col1],
             " and ", col_names[index_col2], "for observation #", obs, ":\n") 
       }

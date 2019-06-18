@@ -36,7 +36,7 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
     K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
                                                                       xm = as.vector(fit_obj$xm),
                                                                       xsd = as.vector(fit_obj$scales))), 
-                                  x = fit_obj$X_clust, 
+                                  x = fit_obj$scaled_x_clust, 
                                   l = fit_obj$l)
     
     return(drop(crossprod(K_star%*%fit_obj$coef)) + fit_obj$ym)

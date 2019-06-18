@@ -48,6 +48,18 @@
 #' ylab = "coefs")
 #' abline(h = 0, lty = 2, lwd = 2, col = "red")
 #' 
+#' 
+#' library(MASS)
+#'
+#'X <- as.matrix(Boston[,-14])
+#'y <- Boston[,14]
+#'log_y <- log(y)
+#'
+#'fit_obj <- matern32::fit_matern32(x = X, y = log_y, lambda = lams, 
+#'with_kmeans = TRUE, centers = 10)
+#'
+#'summary(fit_obj)
+#'  
 fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                          l = NULL, method = c("svd", "chol", "eigen"),
                          with_kmeans = FALSE, centers = NULL, 
@@ -342,7 +354,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                     scaled_x = X, x = x, 
                     with_kmeans = TRUE,
                     cclust_obj = cclust_obj, 
-                    X_clust = X_clust, 
+                    scaled_x_clust = X_clust, 
                     centered_y = centered_y, 
                     fit_method = method)
         

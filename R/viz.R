@@ -118,8 +118,8 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   } else { #is.null(fit_obj$with_kmeans) == FALSE
     
     stopifnot(var1 != var2)
-    col_names <- colnames(fit_obj$X_clust)
-    n <- nrow(fit_obj$X_clust)
+    col_names <- colnames(fit_obj$scaled_x_clust)
+    n <- nrow(fit_obj$scaled_x_clust)
     
     if (!is.null(dim(fit_obj$coef))) # matrix of coeffs 
     {
@@ -128,14 +128,14 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
                        "eigen" = which.min(fit_obj$loocv),
                        "chol" = which.min(fit_obj$loocv))
       
-      res <- inters2(x = fit_obj$X_clust, 
+      res <- inters2(x = fit_obj$scaled_x_clust, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef[, i_best], 
                      l = fit_obj$l[1])
       
     } else { # 1 vector
       
-      res <- inters2(x = fit_obj$X_clust, 
+      res <- inters2(x = fit_obj$scaled_x_clust, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef, 
                      l = fit_obj$l[1])
@@ -143,7 +143,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
     
     # smooth the interactions
     rep_1_n <- rep(1, n)
-    rescaled_x <- fit_obj$X_clust*tcrossprod(rep_1_n, fit_obj$scales) + tcrossprod(rep_1_n, fit_obj$xm)
+    rescaled_x <- fit_obj$scaled_x_clust*tcrossprod(rep_1_n, fit_obj$scales) + tcrossprod(rep_1_n, fit_obj$xm)
     x_var1 <- rescaled_x[, var1]
     x_var2 <- rescaled_x[, var2]
     
