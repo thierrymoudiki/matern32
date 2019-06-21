@@ -17,7 +17,7 @@ plot.matern32 <- function(fit_obj, choice = c("coeffs", "GCV",
   if(class(fit_obj) != "matern32")
   {
     warning("`object` must be of class 'matern32'")
-    UseMethod("summary")
+    UseMethod("plot")
     return(invisible(NULL))
   }
   
