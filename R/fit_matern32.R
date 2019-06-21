@@ -36,7 +36,7 @@
 #' library(MASS)
 #' X <-  longley[,-7]
 #' y <- longley[, 7]
-#' fit_obj <- matern32::fit_matern32(x = X, y = y, lambda = lams)
+#' fit_obj <- matern32::fit_matern32(x = X, y = y)
 #' 
 #' par(mfrow=c(1, 2))
 #'  

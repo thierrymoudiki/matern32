@@ -3,17 +3,49 @@
 #' Title
 #'
 #' @param fit_obj 
+#' @param choice 
+#' @param ... 
 #'
 #' @return
 #' @export
 #'
 #' @examples
-plot_coeffs <- function(fit_obj)
+plot.matern32 <- function(fit_obj, choice = c("coeffs", "GCV", 
+                                              "heterogeneity", "interactions", 
+                                              "residuals"), ...)
+{
+  if(class(fit_obj) != "matern32")
+  {
+    warning("`object` must be of class 'matern32'")
+    UseMethod("summary")
+    return(invisible(NULL))
+  }
+  
+  choice <- match.arg(choice)
+  
+  switch(choice,
+         "coeffs" = plot_coeffs(fit_obj, ...), 
+         "GCV" = plot_GCV(fit_obj, ...), 
+         "heterogeneity" = plot_heterogeneity(fit_obj, ...), 
+         "interactions" = plot_interactions(fit_obj, ...),
+         "residuals" = plot_residuals(fit_obj, ...))
+}
+
+
+#' Title
+#'
+#' @param fit_obj 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_coeffs <- function(fit_obj, ...)
 {
   stopifnot(length(fit_obj$lambda) > 1)
   matplot(log(fit_obj$lambda), t(fit_obj$coef), type = 'l', 
   main = "coefficients = f(lambda)", xlab = "log(lambda)", 
-  ylab = "coefs")
+  ylab = "coefs", ...)
   abline(h = 0, lty = 2, lwd = 2, col = "red")
   
   invisible(list(lambda = fit_obj$lambda, 
@@ -28,11 +60,11 @@ plot_coeffs <- function(fit_obj)
 #' @export
 #'
 #' @examples
-plot_GCV <- function(fit_obj){
+plot_GCV <- function(fit_obj, ...){
   plot(log(fit_obj$lambda),  fit_obj$GCV, type = 'l', 
        main = "GCV error", 
        xlab = "log(lambda)",
-       ylab = "GCV")
+       ylab = "GCV", ...)
   
   invisible(list(lambda=fit_obj$lambda, 
                  GCV=fit_obj$GCV))
@@ -190,7 +222,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
                    color = terrain.colors, 
                    main = paste("smoothed interactions effects \n", 
                                 col_names[var1], "x", col_names[var2]),
-                   xlab = col_names[var1], ylab = col_names[var2]
+                   xlab = col_names[var1], ylab = col_names[var2], ...
     )
   } else {
     filled.contour(x = x_new, y = y_new, z = z, 
@@ -198,7 +230,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
                    main = paste("smoothed interactions effects \n", 
                                 "covariate", var1, "x covariate", var2),
                    xlab = paste("covariate", var1), 
-                   ylab = paste("covariate", var2))
+                   ylab = paste("covariate", var2), ...)
   }
   
   # return smoothed grid
@@ -215,7 +247,7 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
 #' @export
 #'
 #' @examples
-plot_residuals <- function(fit_obj)
+plot_residuals <- function(fit_obj, ...)
 {
   
   if (!is.null(dim(fit_obj$coef)))
@@ -238,7 +270,7 @@ plot_residuals <- function(fit_obj)
   plot(x = fitted_values, 
        y = residuals, type = 'p', 
        col = "gray60", main = "residuals vs fitted values",
-       xlab = "fitted values", ylab = "residuals")
+       xlab = "fitted values", ylab = "residuals", ...)
   abline(h = 0, col = "red")
   
 }
