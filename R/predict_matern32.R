@@ -23,7 +23,7 @@
 #' colnames(df) <- paste0(round(lams, 2))
 #' summary(df)
 #' boxplot(df[, c(1, 10, 25, 35, 50)], 
-#' main = "distribution of bias", 
+#' main = "distribution of in sample bias", 
 #' xlab = "lambda", ylab = "y_hat - y")
 #' 
 predict_matern32 <- function(fit_obj, newx, ci = NULL)
@@ -31,25 +31,51 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
   if (is.vector(newx))
     newx <- t(newx)
   
-  if (!is.null(fit_obj$with_kmeans))
+  if (fit_obj$centering) 
   {
-    K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
-                                                                      xm = as.vector(fit_obj$xm),
-                                                                      xsd = as.vector(fit_obj$scales))), 
-                                  x = fit_obj$scaled_x_clust, 
-                                  l = fit_obj$l)
+    # response was centered 
+    if (!is.null(fit_obj$with_kmeans))
+    {
+      K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                        xm = as.vector(fit_obj$xm),
+                                                                        xsd = as.vector(fit_obj$scales))), 
+                                    x = fit_obj$scaled_x_clust, 
+                                    l = fit_obj$l)
+      
+      return(drop(crossprod(K_star%*%fit_obj$coef)) + fit_obj$ym)
+    } else {
+      
+      K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                        xm = as.vector(fit_obj$xm),
+                                                                        xsd = as.vector(fit_obj$scales))), 
+                                    x = fit_obj$scaled_x, 
+                                    l = fit_obj$l)
+      
+      return(drop(crossprod(K_star, fit_obj$coef)) + fit_obj$ym)
+    }
     
-    return(drop(crossprod(K_star%*%fit_obj$coef)) + fit_obj$ym)
+  } else {  
     
-  } else {
-    
-    K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
-                                                                      xm = as.vector(fit_obj$xm),
-                                                                      xsd = as.vector(fit_obj$scales))), 
-                                  x = fit_obj$scaled_x, 
-                                  l = fit_obj$l)
-    
-    return(drop(crossprod(K_star, fit_obj$coef)) + fit_obj$ym)
+    # response wasn't centered 
+    if (!is.null(fit_obj$with_kmeans))
+    {
+      K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                        xm = as.vector(fit_obj$xm),
+                                                                        xsd = as.vector(fit_obj$scales))), 
+                                    x = fit_obj$scaled_x_clust, 
+                                    l = fit_obj$l)
+      
+      return(drop(crossprod(K_star%*%fit_obj$coef)))
+    } else {
+      
+      K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
+                                                                        xm = as.vector(fit_obj$xm),
+                                                                        xsd = as.vector(fit_obj$scales))), 
+                                    x = fit_obj$scaled_x, 
+                                    l = fit_obj$l)
+      
+      return(drop(crossprod(K_star, fit_obj$coef)))
+    }
     
   }
   

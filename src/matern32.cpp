@@ -6,7 +6,6 @@ using namespace Rcpp;
 
 /* 0 - utils */
 
-
 // [[Rcpp::export]]
 double crossprod_cpp(NumericVector x, NumericVector y)
 {
@@ -43,7 +42,7 @@ double l2_norm(NumericVector x)
 NumericMatrix na_matrix(unsigned int n, unsigned int p)
 {
   NumericMatrix m(n,p) ;
-  std::fill( m.begin(), m.end(), NumericVector::get_na() ) ;
+  std::fill(m.begin(), m.end(), NumericVector::get_na()) ;
   return m ;
 }
 
@@ -63,9 +62,7 @@ double weighted_l2_norm(NumericVector x, NumericVector l)
 }
 
 
-
 /* 1 - Matérn 3/2 kernel */
-
 
 // [[Rcpp::export]]
 NumericMatrix matern32_kxx_cpp(NumericMatrix x, 
@@ -113,7 +110,7 @@ NumericMatrix matern32_kxstar_cpp(NumericMatrix newx,
 
 /* 2 - Derivatives */
 
-
+/* 2 - 1 Derivatives Eq.8 and Eq.9 */
 // [[Rcpp::export]]
 List derivs(NumericMatrix x, // matrix of inputs
             NumericVector c, // coefficients (y = K*c)

@@ -32,6 +32,8 @@
 #' ylab = "coefs")
 #' abline(h = 0, lty = 2, lwd = 2, col = "red")
 #' 
+#'matern32::summary.matern32(fit_obj)
+#' 
 #' 
 #' library(MASS)
 #' X <-  longley[,-7]
@@ -40,30 +42,29 @@
 #' 
 #' par(mfrow=c(1, 2))
 #'  
-#' plot(log(lams), fit_obj$GCV, type = 'l', main = "GCV", 
+#' plot(log(fit_obj$lambda), fit_obj$GCV, type = 'l', main = "GCV", 
 #' ylab = "GCV")
 #' 
-#' matplot(log(lams), t(fit_obj$coef), type = 'l', 
+#' matplot(log(fit_obj$lambda), t(fit_obj$coef), type = 'l', 
 #' main = "coefficients = f(lambda)", xlab = "log(lambda)", 
 #' ylab = "coefs")
 #' abline(h = 0, lty = 2, lwd = 2, col = "red")
 #' 
+#'matern32::summary.matern32(fit_obj)
 #' 
 #' library(MASS)
 #'
 #'X <- as.matrix(Boston[,-14])
 #'y <- Boston[,14]
-#'log_y <- log(y)
 #'
-#'fit_obj <- matern32::fit_matern32(x = X, y = log_y, lambda = lams, 
-#'with_kmeans = TRUE, centers = 10)
+#'fit_obj <- matern32::fit_matern32(x = X, y = y, lambda = lams)
 #'
-#'summary(fit_obj)
+#'matern32::summary.matern32(fit_obj)
 #'  
-fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
-                         l = NULL, method = c("svd", "chol", "eigen"),
+fit_matern32 <- function(x, y, lambda = 10^seq(-10, 10, length.out = 100),#10^seq(-5, 4, length.out = 100),
+                         l = NULL, method = c("chol", "svd", "eigen"),
                          with_kmeans = FALSE, centers = NULL, 
-                         seed = 123, cl = NULL, ...)
+                         centering = FALSE, seed = 123, cl = NULL, ...)
 {
   method <- match.arg(method)
   
@@ -75,9 +76,15 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   p <- dim(x)[2]
   stopifnot(n == length(y))
   
-  # centered response
-  ym <- mean(y)
-  centered_y <- y - ym
+  # centered response?
+  if (centering)
+  {
+    ym <- mean(y)
+    response_y <- y - ym 
+  } else {
+    ym <- mean(y)
+    response_y <- y
+  }
   
   # construct covariance
   x_scaled <- matern32::my_scale(x)
@@ -90,13 +97,17 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
   if (length(l) == 1)
     l <- rep(l, p)
   
-  if (with_kmeans == FALSE) 
-    K <- matern32_kxx_cpp(x = X, l = l)  
+  if (!with_kmeans) 
+  {
+    K <- matern32_kxx_cpp(x = X, l = l)   
+  }
   
   if(n > 500) # can use kmeans
   {
+    
     if (with_kmeans == TRUE)
     {
+      
       # adjust KRR to centers = X and this new response = y
       if (is.null(centers))
       {
@@ -111,20 +122,20 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                                      centers = centers)
         # new training set (X_clust, y_clust)
         X_clust <- as.matrix(cclust_obj$centers)
-        centered_y_clust <- sapply(1:centers, 
-                                   function(i) mean(centered_y[which(cclust_obj$cluster == i)]))
+        response_y_clust <- sapply(1:centers, 
+                                   function(i) mean(response_y[which(cclust_obj$cluster == i)]))
         K <- matern32_kxx_cpp(x = X_clust, l = l)  
       }
       
     } else { # with_kmeans == FALSE
-      cat("Processing... (try using option 'with_kmeans')", "\n") 
+      cat("Processing... (try using option 'with_kmeans' for faster results)", "\n") 
     }
     
   } else { # if (n <= 500)
     
     if (with_kmeans == TRUE)
     {
-      warning("option 'with_kmeans' not implemented for n_obs <= 500")
+      warning("option 'with_kmeans' not useful for n_obs <= 500")
     } else {
       K <- matern32_kxx_cpp(x = X, l = l)  
     }
@@ -136,7 +147,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     if (method == "svd")
     {
       Xs <- La.svd(K)
-      rhs <- crossprod(Xs$u, centered_y)
+      rhs <- crossprod(Xs$u, response_y)
       d <- Xs$d
       nb_di <- length(d)
       div <- d ^ 2 + rep(lambda, rep(nb_di, nlambda))
@@ -145,9 +156,16 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       coef <- crossprod(Xs$vt, a)
       colnames(coef) <- lambda
       
-      centered_y_hat <- K %*% coef
-      fitted_values <- drop(ym +  centered_y_hat)
-      resid <- centered_y - centered_y_hat
+      response_y_hat <- K %*% coef
+     
+      if (centering)
+      {
+        fitted_values <- drop(ym +  response_y_hat) 
+      } else {
+        fitted_values <- drop(response_y_hat)
+      }
+      
+      resid <- response_y - response_y_hat
       colnames(resid) <- lambda
       GCV <- colSums(resid^2)/(nrow(X) - colSums(matrix(d^2/div, 
                                                         nb_di)))^2
@@ -166,12 +184,14 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       
       res <- list(K = K, l = l, 
                   lambda = lambda,
-                  coef = drop(coef), scales = x_scaled$xsd,
+                  coef = drop(coef), 
+                  centering = centering,
+                  scales = x_scaled$xsd,
                   ym = ym, xm = x_scaled$xm,
                   fitted_values = fitted_values, resid = resid,
                   GCV = GCV, R_Squared = R_Squared, 
                   Adj_R_Squared = Adj_R_Squared,
-                  scaled_x = X, x = x, centered_y = centered_y, 
+                  scaled_x = X, x = x, response_y = response_y, 
                   fit_method = method)
       
       class(res) <- "matern32"
@@ -185,7 +205,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
       {
         K_plus <- K + lambda*diag(n)
         invK <- chol2inv(chol(K_plus))
-        coef <- invK%*%centered_y
+        coef <- invK%*%response_y
         loocv <- sum(drop(coef/diag(invK))^2)
       } else { # length(lambda) > 1
         
@@ -193,7 +213,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         {
           K_plus <- K + lambda_i*diag(n)
           invK <- chol2inv(chol(K_plus))
-          coef <- invK%*%centered_y
+          coef <- invK%*%response_y
           return(list(coef = coef,
                       loocv = drop(coef/diag(invK))))
         }
@@ -219,7 +239,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         Q <- eigenK$vectors 
         inv_eigen <- solve_eigen(Eigenvectors = Q,
                                  Eigenvalues = eigen_values,
-                                 y = centered_y,
+                                 y = response_y,
                                  lambda = lambda)
         
         coef <- inv_eigen$coeffs
@@ -233,7 +253,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
           Q <- eigenK$vectors 
           inv_eigen <- solve_eigen(Eigenvectors = Q,
                                    Eigenvalues = eigen_values,
-                                   y = centered_y,
+                                   y = response_y,
                                    lambda = lambda_i)
           return(list(coef = inv_eigen$coef,
                       loocv = inv_eigen$loocv))
@@ -256,9 +276,16 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     {
       if (length(lambda) == 1)
       {
-        centered_y_hat <- K %*% coef
-        fitted_values <- drop(ym +  centered_y_hat)
-        resid <- centered_y - centered_y_hat
+        response_y_hat <- K %*% coef
+        
+        if (centering)
+        {
+          fitted_values <- drop(ym +  response_y_hat) 
+        } else {
+          fitted_values <- drop(response_y_hat)
+        }
+        
+        resid <- response_y - response_y_hat
         
         RSS <- sum((y - fitted_values)^2)
         TSS <- sum((y - ym)^2)
@@ -268,21 +295,29 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         res <- list(K = K, l = l, 
                     lambda = lambda,
                     coef = drop(coef), 
+                    centering = centering,
                     scales = x_scaled$xsd,
                     ym = ym, xm = x_scaled$xm,
                     fitted_values = fitted_values, resid = drop(resid),
                     loocv = loocv, R_Squared = R_Squared, 
                     Adj_R_Squared = Adj_R_Squared, 
-                    scaled_x = X, centered_y = centered_y, 
+                    scaled_x = X, x = x, response_y = response_y, 
                     fit_method = method)
         
         class(res) <- "matern32"
         
         return(res)  
       } else { 
-        centered_y_hat <- K %*% coefs
-        fitted_values <- drop(ym +  centered_y_hat)
-        resid <- centered_y - centered_y_hat
+        response_y_hat <- K %*% coefs
+        
+        if (centering)
+        {
+          fitted_values <- drop(ym +  response_y_hat) 
+        } else {
+          fitted_values <- drop(response_y_hat)
+        }
+        
+        resid <- response_y - response_y_hat
         
         RSS <- colSums((y - fitted_values)^2)
         TSS <- sum((y - ym)^2)
@@ -293,12 +328,13 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         res <- list(K = K, l = l, 
                     lambda = lambda,
                     coef = drop(coefs), 
+                    centering = centering,
                     scales = x_scaled$xsd,
                     ym = ym, xm = x_scaled$xm,
                     fitted_values = fitted_values, resid = resid,
                     loocv = loocv, R_Squared = R_Squared, 
                     Adj_R_Squared = Adj_R_Squared, 
-                    scaled_x = X, centered_y = centered_y, 
+                    scaled_x = X, x = x, response_y = response_y, 
                     fit_method = method)
         
         class(res) <- "matern32"
@@ -312,13 +348,13 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
     if (n > 500)
     {
       
-      if (method %in% c("chol", "eigen"))
+      if (method %in% c("eigen"))
         stop("'method' not implemented")
       
       if (method == "svd")
       {
         Xs <- La.svd(K) # K is based on clustered X 
-        rhs <- crossprod(Xs$u, centered_y_clust)
+        rhs <- crossprod(Xs$u, response_y_clust)
         d <- Xs$d
         nb_di <- length(d)
         div <- d ^ 2 + rep(lambda, rep(nb_di, nlambda))
@@ -333,9 +369,16 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                                       x = X_clust, 
                                       l = l)
         
-        centered_y_hat <- K_star%*%coef 
-        fitted_values <- drop(ym + centered_y_hat)
-        resid <- centered_y - centered_y_hat
+        response_y_hat <- K_star%*%coef 
+        
+        if (centering)
+        {
+          fitted_values <- drop(ym +  response_y_hat) 
+        } else {
+          fitted_values <- drop(response_y_hat)
+        }
+        
+        resid <- response_y - response_y_hat
         colnames(resid) <- lambda
         GCV <- colSums(resid^2)/(nrow(X) - colSums(matrix(d^2/div, 
                                                           nb_di)))^2
@@ -354,7 +397,9 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
         
         res <- list(K = K, l = l, 
                     lambda = lambda,
-                    coef = drop(coef), scales = scales,
+                    coef = drop(coef),
+                    centering = centering,
+                    scales = scales,
                     ym = ym, xm = xm,
                     fitted_values = fitted_values, resid = resid,
                     GCV = GCV, R_Squared = R_Squared, 
@@ -363,7 +408,7 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-5, 4, length.out = 100),
                     with_kmeans = TRUE,
                     cclust_obj = cclust_obj, 
                     scaled_x_clust = X_clust, 
-                    centered_y = centered_y, 
+                    response_y = response_y, 
                     fit_method = method)
         
         class(res) <- "matern32"

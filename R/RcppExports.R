@@ -45,7 +45,3 @@ find_lam_eigen <- function(Eigenvectors, Eigenvalues, y, lambda_vector) {
     .Call('_matern32_find_lam_eigen', PACKAGE = 'matern32', Eigenvectors, Eigenvalues, y, lambda_vector)
 }
 
-rcpp_hello_world <- function() {
-    .Call('_matern32_rcpp_hello_world', PACKAGE = 'matern32')
-}
-

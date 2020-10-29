@@ -47,6 +47,11 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     best_lam <- fit_obj$lambda
   }
   
+  summary_response <- quantile(fit_obj$response_y, 
+                               probs = c(0, 25, 50, 75, 100)/100)
+  names(summary_response) <- c("Min.", "1st Qu.",  "Median", 
+                            "3rd Qu.", "Max.")
+  
   summary_resid <- quantile(residuals, 
                             probs = c(0, 25, 50, 75, 100)/100)
   names(summary_resid) <- c("Min.", "1st Qu.",  "Median", 
@@ -103,6 +108,10 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
   
   if (verbose == TRUE)
   {
+    
+    cat("Response:", "\n")
+    print(drop(summary_response))
+    cat("\n")
     cat("Residuals:", "\n")
     print(drop(summary_resid))
     cat("\n")
@@ -128,6 +137,10 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     cat("Multiple R-squared:  ", R_Squared, "	Adjusted R-squared:", Adj_R_Squared,"\n")
   }
   
+  cat("\n")
+  cat("Residuals Box test:  ", Box.test(residuals)$p.value, " Residuals Shapiro test:  ", shapiro.test(residuals)$p, "\n")
+  
+  
   if(!is.null(fit_obj$GCV))
   {
     if (verbose == TRUE)
@@ -140,6 +153,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
                           GCV = as.numeric(GCV), 
                           best_lam = as.numeric(best_lam))))
   } else {
+    
     if (verbose == TRUE)
       cat("\n")
       cat("LOOCV error:  ", loocv, "lambda: ", best_lam, "\n")
@@ -150,4 +164,5 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
                           loocv = as.numeric(loocv), 
                           best_lam = as.numeric(best_lam))))
   }
+  
 }
