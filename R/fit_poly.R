@@ -11,37 +11,38 @@
 #' @examples
 fit_poly <- function(X, y, degree = 1)
 {
-  stopifnot(dim(X)[2] == 2)
-  ym <- mean(y)
-  scales <- my_scale(X)
-  scaled_X <- scales$res
-  xm <- scales$xm
   
-  centered_y <- y - ym
-  x1 <- scaled_X[,1]
-  x2 <- scaled_X[,2]
+  stopifnot(dim(X)[2] == 2)
+  
+  x1 <- X[, 1]
+  x2 <- X[, 2]
   
   if (degree == 1)
   {
-    XX <- cbind(scaled_X, x1*x2)
+    XX <- cbind(X, x1*x2)
   }
   
   if (degree == 2)
   {
-    XX <- cbind(scaled_X, scaled_X^2, 
-          x1*x2)
+    XX <- cbind(X, X^2, x1*x2)
   }
   
   if (degree == 3)
   {
-    XX <- cbind(scaled_X, scaled_X^2, scaled_X^3, 
+    XX <- cbind(X, X^2, X^3, 
           x1*x2, x1*(x2^2), (x1^2)*x2, 
           (x1^2)*(x2^2))
   }
   
-  return(list(fit_obj = list(coefficients = MASS::ginv(XX)%*%centered_y, 
-                             degree = degree), 
-              ym = ym, xm = xm))
+  df <- data.frame(y = y, x = XX)
+  
+  obj <- MASS::lm.ridge(y ~ ., data=df, 
+                        lambda = 10^seq(from=-10, to=10, 
+                                        length.out = 100))
+
+  obj$degree <- degree
+  
+  return(obj)
 }
 
 
@@ -57,31 +58,30 @@ fit_poly <- function(X, y, degree = 1)
 predict_poly <- function(object, newx)
 {
   stopifnot(dim(newx)[2] == 2)
-  rescaled_X <- as.matrix(my_scale(newx, xm = object$xm))
-  x1 <- rescaled_X[,1]
-  x2 <- rescaled_X[,2]
   
-  degree <- object$fit_obj$degree
+  x1 <- newx[,1]
+  x2 <- newx[,2]
   
-  if (degree == 1)
+  if (object$degree == 1)
   {
-    XX <- cbind(rescaled_X, x1*x2)
+    XX <- cbind(X, x1*x2)
   }
   
-  if (degree == 2)
+  if (object$degree == 2)
   {
-    XX <- cbind(rescaled_X, rescaled_X^2, 
-          x1*x2) 
+    XX <- cbind(X, X^2, x1*x2) 
   }
   
-  if (degree == 3)
+  if (object$degree == 3)
   {
-    XX <- cbind(rescaled_X, rescaled_X^2, rescaled_X^3, 
+    XX <- cbind(X, X^2, X^3, 
           x1*x2, x1*(x2^2), (x1^2)*x2, 
           (x1^2)*(x2^2))
   }
   
-  return(drop(object$ym + XX%*%as.numeric(object$fit_obj$coefficients)))
+  scaled_x <- scale(XX, center = object$xm, scale = object$scales)
+  
+  return(drop(object$ym + scaled_x%*%as.numeric(object$coef[, which.min(object$GCV)])))
 }
 
 

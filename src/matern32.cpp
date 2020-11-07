@@ -2,7 +2,7 @@
 #include <Math.h>
 using namespace Rcpp;
 
-
+// https://gallery.rcpp.org/articles/parallel-distance-matrix/
 
 /* 0 - utils */
 
@@ -121,7 +121,7 @@ List derivs(NumericMatrix x, // matrix of inputs
   unsigned long int p = x.ncol();
   
   if (c.size() != n) {
-    ::Rf_error("you must have c.size() == x.nrow()");
+    ::Rf_error("in derivs: you must have c.size() == x.nrow()");
   }
   
   double r = 0;
@@ -132,8 +132,9 @@ List derivs(NumericMatrix x, // matrix of inputs
   NumericMatrix deriv1 = na_matrix(n2, p);
   NumericMatrix deriv2 = na_matrix(n2, p);
   double temp2 = 0;
-  unsigned long int i = 0;
+  //unsigned long int i = 0;
   
+  /*
   for(unsigned long int i0 = 0; i0 < n; i0++){
     for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
       vec = x(i0, _) - x(k, _);
@@ -145,12 +146,27 @@ List derivs(NumericMatrix x, // matrix of inputs
       i++;
     }
   }
+   */
+  
+    // https://gallery.rcpp.org/articles/parallel-distance-matrix/
+    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
+      for(unsigned long int i0 = k; i0 < n; i0++){
+      vec = x(i0, _) - x(k, _);
+      r = l2_norm(vec);
+      temp2 = c(k)*exp(-temp*r); // temp = sqrt(3)/l;
+      deriv1(i0*n+k, _) = temp2*vec; // first derivative
+      deriv1(k*n+i0, _) = deriv1(i0*n+k, _);
+      deriv2(i0*n+k, _) = temp2*((temp/r)*pow(vec, 2) - 1); // second derivative
+      deriv2(k*n+i0, _) = deriv2(i0*n+k, _);
+    }
+  }
+   
   
   return List::create(Rcpp::Named("deriv1") = const_mult*deriv1,
                       Rcpp::Named("deriv2") = const_mult*deriv2);
 }
 
-
+/* 2 - 2 Derivatives Eq.10 */
 //[[Rcpp::export]]
 NumericMatrix inters(NumericMatrix x, // matrix of covariates
                      unsigned long int j1, // index of first column
@@ -165,15 +181,15 @@ NumericMatrix inters(NumericMatrix x, // matrix of covariates
   j2 = j2 - 1; //!!! beware of R indices starting at 0
   
     if (c.size() != n) {
-      ::Rf_error("you must have c.size() == x.nrow()");
+      ::Rf_error("in inters: you must have c.size() == x.nrow()");
     }
   
     if (j1 == j2) {
-      ::Rf_error("you must have j1 != j2"); //Different columns indices
+      ::Rf_error("in inters: you must have j1 != j2"); //Different columns indices
     }
   
     if (j1 >= p || j2 >= p) {
-      ::Rf_error("you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
+      ::Rf_error("in inters: you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
     }
 
   double r = 0;
@@ -183,10 +199,11 @@ NumericMatrix inters(NumericMatrix x, // matrix of covariates
   NumericMatrix res(n, n);
   
   for(unsigned long int i0 = 0; i0 < n; i0++){
-    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
+    for(unsigned long int k = i0; k < n; k++){ 
       temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
       r = l2_norm(x(i0, _) - x(k, _));
       res(i0, k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative
+      res(k, i0) = res(i0, k);
     }
   }
   
@@ -208,15 +225,15 @@ NumericVector inters2(NumericMatrix x, // matrix of covariates
   j2 = j2 - 1; //!!! beware of R indices starting at 0
   
   if (c.size() != n) {
-    ::Rf_error("you must have c.size() == x.nrow()");
+    ::Rf_error("in inters2: you must have c.size() == x.nrow()");
   }
   
   if (j1 == j2) {
-    ::Rf_error("you must have j1 != j2"); //Different columns indices
+    ::Rf_error("in inters2: you must have j1 != j2"); //Different columns indices
   }
   
   if (j1 >= p || j2 >= p) {
-    ::Rf_error("you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
+    ::Rf_error("in inters2: you must have j1 < x.ncol() and j2 < x.ncol()"); //!!! beware of R indices starting at 0 
   }
   
   double r = 0;
@@ -226,10 +243,11 @@ NumericVector inters2(NumericMatrix x, // matrix of covariates
   NumericVector res(pow(n, 2));
   
   for(unsigned long int i0 = 0; i0 < n; i0++){
-    for(unsigned long int k = 0; k < n; k++){ // There is something to optimize here (?)
+    for(unsigned long int k = i0; k < n; k++){ // There is something to optimize here (?)
       temp2 = (x(i0, j1) - x(k, j1))*(x(i0, j2) - x(k, j2));
       r = l2_norm(x(i0, _) - x(k, _));
       res(i0*n + k) = (c(k)/r)*exp(-temp*r)*temp2; // 2nd derivative // byrow=TRUE
+      res(k*n + i0) = res(i0*n + k);
     }
   }
   

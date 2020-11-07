@@ -16,8 +16,15 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     return(invisible(NULL))
   }
   
-  n <- nrow(fit_obj$scaled_x)
-  p <- ncol(fit_obj$scaled_x)
+  if (!fit_obj$with_kmeans)
+  {
+    n <- nrow(fit_obj$scaled_x)
+    p <- ncol(fit_obj$scaled_x)
+  } else {
+    n <- nrow(fit_obj$scaled_x_clust)
+    p <- ncol(fit_obj$scaled_x_clust)
+  }
+  
   
   index_lam <- switch(fit_obj$fit_method, 
                       "svd" = which.min(fit_obj$GCV),
@@ -115,7 +122,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
     cat("Residuals:", "\n")
     print(drop(summary_resid))
     cat("\n")
-    cat("Coefficients:", "\n") 
+    cat("1st order effects:", "\n") 
   }
   coefficients <- cbind.data.frame(estimate, std_error, 
                                    t_value, p_value, 
@@ -147,6 +154,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
       cat("\n")
       cat("GCV error:  ", GCV, "lambda: ", best_lam, "\n")
     return(invisible(list(coefficients = coefficients, 
+                          derivatives = derivatives,
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),
                           Adj_R_Squared = as.numeric(fit_obj$Adj_R_Squared),
@@ -158,6 +166,7 @@ summary.matern32 <- function(fit_obj, obs=NULL, verbose=TRUE)
       cat("\n")
       cat("LOOCV error:  ", loocv, "lambda: ", best_lam, "\n")
     return(invisible(list(coefficients = coefficients, 
+                          derivatives = derivatives,
                           distro_effects = distro_effects, 
                           R_Squared = as.numeric(R_Squared),
                           Adj_R_Squared = as.numeric(fit_obj$Adj_R_Squared),

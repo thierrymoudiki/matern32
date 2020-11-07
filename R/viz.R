@@ -1,5 +1,4 @@
 
-
 #' Title
 #'
 #' @param fit_obj 
@@ -70,6 +69,25 @@ plot_GCV <- function(fit_obj, ...){
                  GCV=fit_obj$GCV))
 }
 
+#' Title
+#'
+#' @param fit_obj 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_loocv <- function(fit_obj, ...){
+  plot(log(fit_obj$lambda),  fit_obj$loocv, type = 'l', 
+       main = "loocv error", 
+       xlab = "log(lambda)",
+       ylab = "LoocCV", ...)
+  
+  invisible(list(lambda=fit_obj$lambda, 
+                 GCV=fit_obj$loocv))
+}
+
 
 #' Title
 #'
@@ -114,10 +132,12 @@ plot_heterogeneity <- function(fit_obj, var = 1, ...)
 #'
 #' @examples
 plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, 
-                              degree = 1, ...)
+                              method=c("mars", "poly"), degree = 1, ...)
 {
   
-  if (is.null(fit_obj$with_kmeans))
+  method <- match.arg(method)
+  
+  if (!fit_obj$with_kmeans)
   {
     stopifnot(var1 != var2)
     col_names <- colnames(fit_obj$scaled_x)
@@ -133,14 +153,14 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
       res <- inters2(x = fit_obj$scaled_x, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef[, i_best], 
-                     l = fit_obj$l[1])
+                     l = as.double(fit_obj$l[1]))
       
     } else { # 1 vector
       
       res <- inters2(x = fit_obj$scaled_x, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef, 
-                     l = fit_obj$l[1])
+                     l = as.double(fit_obj$l[1]))
     }
     
     # smooth the interactions
@@ -163,14 +183,14 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
       res <- inters2(x = fit_obj$scaled_x_clust, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef[, i_best], 
-                     l = fit_obj$l[1])
+                     l = as.double(fit_obj$l[1]))
       
     } else { # 1 vector
       
       res <- inters2(x = fit_obj$scaled_x_clust, 
                      j1 = var1, j2 = var2, 
                      c = fit_obj$coef, 
-                     l = fit_obj$l[1])
+                     l = as.double(fit_obj$l[1]))
     }
     
     # smooth the interactions
@@ -189,11 +209,22 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   
   grid$z <- res 
   index_na <- !is.na(res)
+  
 
-  smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
-                                             x_var2_rep[index_na]), 
-                                   y = grid$z[index_na], 
-                                   degree = degree) 
+  if (method == "poly")
+  {
+    smooth_obj <- matern32::fit_poly(X = cbind(x_var1_rep[index_na], 
+                                               x_var2_rep[index_na]), 
+                                     y = grid$z[index_na], 
+                                     degree = degree)  
+  } else {
+    df <- cbind.data.frame(x1 = x_var1_rep[index_na],
+                           x2 = x_var2_rep[index_na])
+    
+    smooth_obj <- mda::mars(x = cbind(x_var1_rep[index_na], 
+                                         x_var2_rep[index_na]), 
+                               y = grid$z[index_na])
+  }
   
   # predict smoothed interactions on a grid
   min_x <- min(x_var1); max_x <- max(x_var1)
@@ -205,8 +236,10 @@ plot_interactions <- function(fit_obj, var1 = 1, var2 = 2,
   new_grid <- data.frame(x = rep(x_new, each = n_out), 
                          y = rep(y_new, n_out))
   
-  preds <- matern32::predict_poly(object = smooth_obj, 
-                                  newx = new_grid)
+  preds <- switch(method, 
+                  "poly" = matern32::predict_poly(object = smooth_obj, 
+                                  newx = new_grid), 
+                  "mars" = predict(smooth_obj, newx = new_grid))
   
   # output matrix of smoothed interactions
   z <- matrix(preds, 
@@ -267,10 +300,13 @@ plot_residuals <- function(fit_obj, ...)
     
   }
   
+  fit_lowess <- lowess(x = fitted_values, y = residuals)
+  
   plot(x = fitted_values, 
        y = residuals, type = 'p', 
        col = "gray60", main = "residuals vs fitted values",
        xlab = "fitted values", ylab = "residuals", ...)
+  lines(fitted_values, fit_lowess$y, col="red")
   abline(h = 0, col = "red")
   
 }

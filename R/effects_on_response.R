@@ -13,7 +13,9 @@ inters2 <- memoise::memoize(inters2)
 #' @examples
 derivatives <- function(fit_obj, obs = NULL)
 {
-  if (is.null(fit_obj$with_kmeans))
+  # DRY this: scaled_x
+  
+  if (!fit_obj$with_kmeans)
   {
     n <- nrow(fit_obj$scaled_x)
     
@@ -25,7 +27,8 @@ derivatives <- function(fit_obj, obs = NULL)
       i_best <- switch(fit_obj$fit_method, 
                        "svd" = which.min(fit_obj$GCV),
                        "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
+                       "chol" = which.min(fit_obj$loocv), 
+                       "solve" = which.min(fit_obj$loocv))
       
       res <- derivs(x = fit_obj$scaled_x, 
                     c = fit_obj$coef[, i_best], 
@@ -69,7 +72,7 @@ derivatives <- function(fit_obj, obs = NULL)
       
       return(res)
     }
-  } else { # is.null(fit_obj$with_kmeans) == FALSE
+  } else { # fit_obj$with_kmeans == TRUE
     
     n <- nrow(fit_obj$scaled_x_clust)
     
@@ -81,7 +84,8 @@ derivatives <- function(fit_obj, obs = NULL)
       i_best <- switch(fit_obj$fit_method, 
                        "svd" = which.min(fit_obj$GCV),
                        "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
+                       "chol" = which.min(fit_obj$loocv), 
+                       "solve" = which.min(fit_obj$loocv))
       
       res <- derivs(x = fit_obj$scaled_x_clust, 
                     c = fit_obj$coef[, i_best], 
@@ -145,7 +149,7 @@ derivatives <- memoise::memoize(derivatives)
 interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
 {
   
-  if (is.null(fit_obj$with_kmeans))
+  if (!fit_obj$with_kmeans)
   {
     n <- nrow(fit_obj$scaled_x)
     p <- ncol(fit_obj$scaled_x)
@@ -156,7 +160,8 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
       i_best <- switch(fit_obj$fit_method, 
                        "svd" = which.min(fit_obj$GCV),
                        "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
+                       "chol" = which.min(fit_obj$loocv), 
+                       "solve" = which.min(fit_obj$loocv))
       
       res_inters <- inters(x = as.matrix(fit_obj$scaled_x), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef[ , i_best], 
@@ -206,7 +211,8 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
       i_best <- switch(fit_obj$fit_method, 
                        "svd" = which.min(fit_obj$GCV),
                        "eigen" = which.min(fit_obj$loocv),
-                       "chol" = which.min(fit_obj$loocv))
+                       "chol" = which.min(fit_obj$loocv), 
+                       "solve" = which.min(fit_obj$loocv))
       
       res_inters <- inters(x = as.matrix(fit_obj$scaled_x_clust), j1 = index_col1,
                            j2 = index_col2, c = fit_obj$coef[ , i_best], 
