@@ -15,7 +15,7 @@
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!
 #' y <- rnorm(n)
 #' 
-#' lams <- 10^seq(-5, 4, length.out = 50)
+#' lams <- 10^seq(-10, 10, length.out = 50)
 #' 
 #' fit_obj <- fit_matern32(x = X, y = y, lambda = lams)
 #' 
@@ -37,7 +37,7 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
     if (!is.null(fit_obj$with_kmeans))
     {
       K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
-                                                                        xm = as.vector(fit_obj$xm),
+                                                                        xm = as.matrix(fit_obj$xm),
                                                                         xsd = as.vector(fit_obj$scales))), 
                                     x = fit_obj$scaled_x_clust, 
                                     l = fit_obj$l)
@@ -48,8 +48,8 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
       K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
                                                                         xm = as.vector(fit_obj$xm),
                                                                         xsd = as.vector(fit_obj$scales))), 
-                                    x = fit_obj$scaled_x, 
-                                    l = fit_obj$l)
+                                    x = as.matrix(fit_obj$scaled_x), 
+                                    l = as.vector(fit_obj$l))
       
       return(drop(crossprod(K_star, fit_obj$coef)) + fit_obj$ym)
     }
@@ -57,7 +57,7 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
   } else {  
     
     # response wasn't centered 
-    if (!is.null(fit_obj$with_kmeans))
+    if (fit_obj$with_kmeans)
     {
       K_star <- matern32_kxstar_cpp(newx = as.matrix(matern32::my_scale(x = newx,
                                                                         xm = as.vector(fit_obj$xm),
