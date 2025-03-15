@@ -9,9 +9,6 @@ derivatives(fit_obj, obs = NULL)
 \arguments{
 \item{fit_obj}{}
 }
-\value{
-
-}
 \description{
 Title
 }

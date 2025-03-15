@@ -31,9 +31,6 @@ fit_matern32(
 
 \item{sigma}{}
 }
-\value{
-
-}
 \description{
 Fit Matern 3/2 model
 }

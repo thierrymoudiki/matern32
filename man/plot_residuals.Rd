@@ -9,9 +9,6 @@ plot_residuals(fit_obj, ...)
 \arguments{
 \item{fit_obj}{}
 }
-\value{
-
-}
 \description{
 Plot residuals
 }

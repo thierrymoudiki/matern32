@@ -42,6 +42,8 @@ fit_poly <- function(X, y, degree = 1)
 
   obj$degree <- degree
   
+  class(obj) <- "poly"
+  
   return(obj)
 }
 
@@ -55,7 +57,7 @@ fit_poly <- function(X, y, degree = 1)
 #' @export
 #'
 #' @examples
-predict_poly <- function(object, newx)
+predict.poly <- function(object, newx)
 {
   stopifnot(dim(newx)[2] == 2)
   

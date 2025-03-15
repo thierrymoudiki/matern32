@@ -13,9 +13,6 @@ plot_heterogeneity(fit_obj, var = 1, ...)
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Title
 }

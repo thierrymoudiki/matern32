@@ -15,9 +15,6 @@ sensi2D(fit_obj, index_col1, index_col2, h1, h2, verbose = TRUE)
 
 \item{h}{(must be small)}
 }
-\value{
-
-}
 \description{
 Title
 }

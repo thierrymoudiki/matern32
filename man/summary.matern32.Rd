@@ -11,9 +11,6 @@ summary.matern32(fit_obj, obs = NULL, verbose = TRUE)
 
 \item{obs}{}
 }
-\value{
-
-}
 \description{
 Title
 }

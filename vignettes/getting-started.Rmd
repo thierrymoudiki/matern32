@@ -1,0 +1,51 @@
+---
+title: "Getting started"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r fig.width=7.5}
+library(MASS)
+
+X <-  longley[,-7]
+y <- longley[, 7]
+fit_obj <- matern32::fit_matern32(x = X, y = y)
+
+par(mfrow=c(1, 2))
+ 
+plot(log(fit_obj$lambda), fit_obj$GCV, type = 'l', main = "GCV", 
+ylab = "GCV")
+
+matplot(log(fit_obj$lambda), t(fit_obj$coef), type = 'l', 
+main = "coefficients = f(lambda)", xlab = "log(lambda)", 
+ylab = "coefs")
+abline(h = 0, lty = 2, lwd = 2, col = "red")
+
+summary_fit_obj <- summary(fit_obj)
+
+print(summary_fit_obj$coefficients)
+
+print(summary_fit_obj$distro_effects)
+```
+
+```{r}
+
+X <- as.matrix(Boston[,-14])
+y <- Boston[,14]
+
+set.seed(123)
+idx_train <- sample.int(dim(X)[1], size=floor(0.8*dim(X)[1]))
+fit_obj <- matern32::fit_matern32(x = X[idx_train,], y = y[idx_train], lambda = 0.01)
+
+summary_fit_obj <- summary(fit_obj)
+
+print(summary_fit_obj$coefficients)
+
+print(summary_fit_obj$distro_effects)
+
+print(sqrt(mean((predict(fit_obj, X[-idx_train,]) - y[-idx_train])**2)))
+```
+

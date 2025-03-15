@@ -11,9 +11,6 @@ fit_poly(X, y, degree = 1)
 
 \item{y}{}
 }
-\value{
-
-}
 \description{
 Title
 }

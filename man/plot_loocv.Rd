@@ -11,9 +11,6 @@ plot_loocv(fit_obj, ...)
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Title
 }

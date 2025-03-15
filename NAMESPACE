@@ -1,3 +1,6 @@
 useDynLib(matern32)
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
+S3method(summary, matern32)
+S3method(predict, matern32)
+S3method(predict, poly)

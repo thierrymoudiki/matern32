@@ -9,9 +9,6 @@ plot_GCV(fit_obj, ...)
 \arguments{
 \item{fit_obj}{}
 }
-\value{
-
-}
 \description{
 Title
 }

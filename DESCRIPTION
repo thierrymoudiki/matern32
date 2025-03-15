@@ -1,13 +1,12 @@
 Package: matern32
 Type: Package
-Title: What the Package Does in One 'Title Case' Line
-Version: 1.0
+Title: Kernel Ridge Regression using Matern 3/2 kernels
+Version: 0.1.0
 Date: 2019-02-20
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: One paragraph description of what the package does as one or more
-        full sentences.
-License: GPL (>= 2)
+Author: T. Moudiki
+Maintainer: T. Moudiki <thierry.moudiki@gmail.com>
+Description: Interpretable Kernel Ridge Regression using Matern 3/2 kernels.
+License: BSD_3_clause Clear + file LICENSE
 Imports: Rcpp (>= 0.12.17)
 LinkingTo: Rcpp
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2

@@ -17,9 +17,6 @@ plot.matern32(
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Title
 }

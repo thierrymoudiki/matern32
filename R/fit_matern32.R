@@ -567,4 +567,4 @@ fit_matern32 <- function(x, y, lambda = 10^seq(-10, 10, length.out = 100),#10^se
     }
   }
 }
-fit_matern32 <- memoise::memoize(fit_matern32)
+#fit_matern32 <- memoise::memoize(fit_matern32)

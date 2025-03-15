@@ -15,9 +15,6 @@ interactions(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
 
 \item{obs}{}
 }
-\value{
-
-}
 \description{
 Title
 }

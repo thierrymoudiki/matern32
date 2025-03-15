@@ -19,14 +19,14 @@
 #' 
 #' fit_obj <- fit_matern32(x = X, y = y, lambda = lams)
 #' 
-#' df <- data.frame(predict_matern32(fit_obj, newx = X) - y)
+#' df <- data.frame(predict(fit_obj, X) - y)
 #' colnames(df) <- paste0(round(lams, 2))
 #' summary(df)
 #' boxplot(df[, c(1, 10, 25, 35, 50)], 
 #' main = "distribution of in sample bias", 
 #' xlab = "lambda", ylab = "y_hat - y")
 #' 
-predict_matern32 <- function(fit_obj, newx, ci = NULL)
+predict.matern32 <- function(fit_obj, newx, ci = NULL)
 {
   if (is.vector(newx))
     newx <- t(newx)
@@ -74,10 +74,10 @@ predict_matern32 <- function(fit_obj, newx, ci = NULL)
                                     x = fit_obj$scaled_x, 
                                     l = fit_obj$l)
       
-      return(drop(crossprod(K_star, fit_obj$coef)))
+      return(drop(K_star%*%fit_obj$coef))
     }
     
   }
   
 }
-predict_matern32 <- memoise::memoize(predict_matern32)
+#predict_matern32 <- memoise::memoize(predict_matern32)

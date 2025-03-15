@@ -22,9 +22,6 @@ plot_interactions(
 
 \item{...}{}
 }
-\value{
-
-}
 \description{
 Title
 }
