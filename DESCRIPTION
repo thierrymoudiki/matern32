@@ -8,5 +8,6 @@ Maintainer: T. Moudiki <thierry.moudiki@gmail.com>
 Description: Interpretable Kernel Ridge Regression using Matern 3/2 kernels.
 License: BSD_3_clause Clear + file LICENSE
 Imports: Rcpp (>= 0.12.17)
+Suggests: MASS
 LinkingTo: Rcpp
 RoxygenNote: 7.3.2
