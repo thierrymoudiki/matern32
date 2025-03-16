@@ -2,15 +2,17 @@
 % Please edit documentation in R/fit_poly.R
 \name{fit_poly}
 \alias{fit_poly}
-\title{Title}
+\title{Polynomial regression}
 \usage{
-fit_poly(X, y, degree = 1)
+fit_poly(x, y, degree = 1)
 }
 \arguments{
-\item{X}{}
+\item{x}{Matrix of predictors}
 
-\item{y}{}
+\item{y}{Vector of response values}
+
+\item{degree}{Degree of the polynomial}
 }
 \description{
-Title
+Polynomial regression
 }

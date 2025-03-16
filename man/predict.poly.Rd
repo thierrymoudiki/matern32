@@ -2,15 +2,15 @@
 % Please edit documentation in R/fit_poly.R
 \name{predict.poly}
 \alias{predict.poly}
-\title{Title}
+\title{Predict method for polynomial regression}
 \usage{
 \method{predict}{poly}(object, newx)
 }
 \arguments{
-\item{object}{}
+\item{object}{Fitted object}
 
-\item{newx}{}
+\item{newx}{New data}
 }
 \description{
-Title
+Predict method for polynomial regression
 }

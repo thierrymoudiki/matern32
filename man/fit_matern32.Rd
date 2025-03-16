@@ -14,22 +14,31 @@ fit_matern32(
   centers = NULL,
   centering = FALSE,
   seed = 123,
-  cl = NULL,
   ...
 )
 }
 \arguments{
-\item{x}{}
+\item{x}{Matrix of predictors}
 
-\item{y}{}
+\item{y}{Vector of response values}
 
-\item{lambda}{}
+\item{lambda}{Regularization parameter}
 
-\item{l}{}
+\item{l}{Hyperparameter for the Matern 3/2 kernel}
+
+\item{method}{Method to use for fitting the model}
+
+\item{with_kmeans}{Use k-means to reduce the number of observations}
+
+\item{centers}{Number of centers to use in k-means}
+
+\item{centering}{Center the response}
+
+\item{seed}{Seed for reproducibility}
 
 \item{...}{}
 
-\item{sigma}{}
+\item{sigma}{Hyperparameter for the Matern 3/2 kernel}
 }
 \description{
 Fit Matern 3/2 model

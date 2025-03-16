@@ -2,13 +2,13 @@
 % Please edit documentation in R/effects_on_response.R
 \name{derivatives}
 \alias{derivatives}
-\title{Title}
+\title{Compute the first and second order derivatives of the response function}
 \usage{
 derivatives(fit_obj, obs = NULL)
 }
 \arguments{
-\item{fit_obj}{}
+\item{fit_obj}{Fitted object}
 }
 \description{
-Title
+Compute the first and second order derivatives of the response function
 }

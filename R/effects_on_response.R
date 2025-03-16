@@ -3,9 +3,9 @@
 #inters <- memoise::memoize(inters)
 #inters2 <- memoise::memoize(inters2)
   
-#' Title
+#' Compute the first and second order derivatives of the response function
 #'
-#' @param fit_obj 
+#' @param fit_obj Fitted object
 #'
 #' @return
 #' @export

@@ -2,15 +2,17 @@
 % Please edit documentation in R/summary.R
 \name{summary.matern32}
 \alias{summary.matern32}
-\title{Title}
+\title{Summary method for matern32}
 \usage{
 summary.matern32(fit_obj, obs = NULL, verbose = TRUE)
 }
 \arguments{
-\item{fit_obj}{}
+\item{fit_obj}{Fitted object of class 'matern32'}
 
-\item{obs}{}
+\item{obs}{observation number for which to calculate the derivatives (default is NULL)}
+
+\item{verbose}{logical indicating whether to print the summary (default is TRUE)}
 }
 \description{
-Title
+Summary method for matern32
 }

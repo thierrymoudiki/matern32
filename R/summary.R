@@ -1,7 +1,8 @@
-#' Title
+#' @title Summary method for matern32
 #'
-#' @param fit_obj 
-#' @param obs 
+#' @param fit_obj Fitted object of class 'matern32'
+#' @param obs observation number for which to calculate the derivatives (default is NULL)
+#' @param verbose logical indicating whether to print the summary (default is TRUE)
 #'
 #' @return
 #' @export

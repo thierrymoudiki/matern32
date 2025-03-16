@@ -7,11 +7,11 @@
 \method{predict}{matern32}(fit_obj, newx, ci = NULL)
 }
 \arguments{
-\item{fit_obj}{}
+\item{fit_obj}{Fitted object from \code{fit_matern32}}
 
-\item{newx}{}
+\item{newx}{New data matrix}
 
-\item{ci}{}
+\item{ci}{Not implemented yet}
 }
 \description{
 Predict from Matern 3/2 model

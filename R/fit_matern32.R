@@ -1,10 +1,17 @@
 #' Fit Matern 3/2 model
 #'
-#' @param x 
-#' @param y 
-#' @param sigma 
-#' @param l 
-#' @param lambda 
+#' @param x Matrix of predictors
+#' @param y Vector of response values
+#' @param sigma Hyperparameter for the Matern 3/2 kernel
+#' @param l Hyperparameter for the Matern 3/2 kernel
+#' @param lambda Regularization parameter
+#' @param method Method to use for fitting the model
+#' @param with_kmeans Use k-means to reduce the number of observations
+#' @param centers Number of centers to use in k-means
+#' @param centering Center the response
+#' @param seed Seed for reproducibility
+#' @param ... Additional arguments
+#' 
 #' @param ... 
 #'
 #' @return
@@ -64,7 +71,7 @@
 fit_matern32 <- function(x, y, lambda = 10^seq(-10, 10, length.out = 100),#10^seq(-5, 4, length.out = 100),
                          l = NULL, method = c("chol", "solve", "svd", "eigen"),
                          with_kmeans = FALSE, centers = NULL, 
-                         centering = FALSE, seed = 123, cl = NULL, ...)
+                         centering = FALSE, seed = 123, ...)
 {
   method <- match.arg(method)
   #

@@ -1,8 +1,8 @@
 #' Predict from Matern 3/2 model
 #'
-#' @param fit_obj 
-#' @param newx 
-#' @param ci 
+#' @param fit_obj Fitted object from \code{fit_matern32}
+#' @param newx New data matrix
+#' @param ci Not implemented yet
 #'
 #' @return
 #' @export

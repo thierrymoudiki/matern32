@@ -1,17 +1,18 @@
 # Test poly2 --------------------------------------------------------------
 
-#' Title
+#' Polynomial regression
 #'
-#' @param X 
-#' @param y 
+#' @param x Matrix of predictors
+#' @param y Vector of response values 
+#' @param degree Degree of the polynomial
 #'
 #' @return
 #' @export
 #'
 #' @examples
-fit_poly <- function(X, y, degree = 1)
+fit_poly <- function(x, y, degree = 1)
 {
-  
+  X <- as.matrix(x)
   stopifnot(dim(X)[2] == 2)
   
   x1 <- X[, 1]
@@ -48,10 +49,10 @@ fit_poly <- function(X, y, degree = 1)
 }
 
 
-#' Title
+#' Predict method for polynomial regression
 #'
-#' @param object 
-#' @param newx 
+#' @param object Fitted object
+#' @param newx New data
 #'
 #' @return
 #' @export
