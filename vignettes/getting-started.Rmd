@@ -7,35 +7,34 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Install package
+
+```{r}
+options(repos = c(
+                    techtonique = "https://r-packages.techtonique.net",
+                    CRAN = "https://cloud.r-project.org"
+                ))
+install.packages("matern32")                
+```
+
+# Data set 
+
 ```{r}
 X <- as.matrix(MASS::Boston[,-14])
 y <- MASS::Boston[,14]
-
 set.seed(123)
 idx_train <- sample.int(dim(X)[1], size=floor(0.8*dim(X)[1]))
-fit_obj <- matern32::fit_matern32(x = X[idx_train,], y = y[idx_train], lambda = 10**seq(-10, 10, by=1))
 ```
 
-```{r fig.width=7.5, fig.height=5}
-par(mfrow=c(1, 2))
-plot(fit_obj, choice = "coeffs")
-plot(fit_obj, choice = "GCV")
-
-
-plot(fit_obj, choice = "residuals")
-```
+# Fitting a model
 
 ```{r}
 fit_obj <- matern32::fit_matern32(x = X[idx_train,], y = y[idx_train], lambda = 0.01)
 
-summary_fit_obj <- summary(fit_obj)
-
-print(summary_fit_obj$coefficients)
-
-print(summary_fit_obj$distro_effects)
-
 print(sqrt(mean((predict(fit_obj, X[-idx_train,]) - y[-idx_train])**2)))
 ```
+
+# Prediction intervals
 
 ```{r}
 fit_obj <- matern32::fit_matern32(x = X[idx_train,], y = y[idx_train], lambda = 0.01, method = "conformal")
@@ -49,4 +48,56 @@ preds_surrogateconformal <- predict(fit_obj, X[-idx_train,], level=95, method = 
 (coverage_kdeconformal <- mean((y[-idx_train] >= preds_kdeconformal$lower) & (y[-idx_train] <= preds_kdeconformal$upper)))
 (coverage_bootstrapconformal <- mean((y[-idx_train] >= preds_bootstrapconformal$lower) & (y[-idx_train] <= preds_bootstrapconformal$upper)))
 (coverage_surrogateconformal <- mean((y[-idx_train] >= preds_surrogateconformal$lower) & (y[-idx_train] <= preds_surrogateconformal$upper)))
+```
+
+```{r fig.width=7.5, fig.height=5}
+# Extract predictions and true values
+x_test <- 1:length(y[-idx_train])
+y_test <- y[-idx_train]
+
+# Define a helper function to plot prediction intervals
+plot_intervals <- function(x, y, lower, upper, method_name) {
+  plot(x, y, type = "p", pch = 16, col = "blue", xlab = "Observation", ylab = "Value",
+       main = paste("Prediction Intervals -", method_name))
+  polygon(c(x, rev(x)), c(lower, rev(upper)), col = rgb(0.1, 0.1, 0.8, 0.2), border = NA)
+  predicted_mean <- (lower + upper) / 2
+  lines(x, predicted_mean, col = "red", lwd = 2)
+}
+
+par(mfrow = c(2, 2))
+# Plot for Split Conformal
+plot_intervals(x_test, y_test, preds_splitconformal$lower, preds_splitconformal$upper, "Split Conformal")
+
+# Plot for KDE Conformal
+plot_intervals(x_test, y_test, preds_kdeconformal$lower, preds_kdeconformal$upper, "KDE Conformal")
+
+# Plot for Bootstrap Conformal
+plot_intervals(x_test, y_test, preds_bootstrapconformal$lower, preds_bootstrapconformal$upper, "Bootstrap Conformal")
+
+# Plot for Surrogate Conformal
+plot_intervals(x_test, y_test, preds_surrogateconformal$lower, preds_surrogateconformal$upper, "Surrogate Conformal")
+```
+
+# Summary of the fit object
+
+```{r}
+set.seed(123)
+idx_train <- sample.int(dim(X)[1], size=floor(0.8*dim(X)[1]))
+fit_obj <- matern32::fit_matern32(x = X[idx_train,], y = y[idx_train], lambda = 10**seq(-10, 10, by=1))
+
+summary_fit_obj <- summary(fit_obj)
+
+print(summary_fit_obj$coefficients)
+
+print(summary_fit_obj$distro_effects)
+```
+
+```{r fig.width=7.5, fig.height=5}
+par(mfrow=c(1, 2))
+plot(fit_obj, choice = "coeffs")
+plot(fit_obj, choice = "GCV")
+```
+
+```{r fig.width=7.5, fig.height=5}
+plot(fit_obj, choice = "residuals")
 ```
