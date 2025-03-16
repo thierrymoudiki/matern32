@@ -7,7 +7,7 @@ Author: T. Moudiki
 Maintainer: T. Moudiki <thierry.moudiki@gmail.com>
 Description: Interpretable Probabilistic Kernel Ridge Regression using Matern 3/2 kernels.
 License: BSD_3_clause Clear + file LICENSE
-Imports: Rcpp (>= 0.12.17)
+Imports: Rcpp (>= 0.12.17), tseries
 Suggests: MASS, mda
 LinkingTo: Rcpp
 RoxygenNote: 7.3.2
