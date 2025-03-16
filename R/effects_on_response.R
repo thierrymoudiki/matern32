@@ -1,7 +1,7 @@
 # Cpp functions (used in summary and sensi1 and 2D)
-derivs <- memoise::memoize(derivs)
-inters <- memoise::memoize(inters)
-inters2 <- memoise::memoize(inters2)
+#derivs <- memoise::memoize(derivs)
+#inters <- memoise::memoize(inters)
+#inters2 <- memoise::memoize(inters2)
   
 #' Title
 #'
@@ -132,7 +132,7 @@ derivatives <- function(fit_obj, obs = NULL)
     
   }
 }
-derivatives <- memoise::memoize(derivatives)
+#derivatives <- memoise::memoize(derivatives)
 
 
 #' Title
@@ -255,4 +255,4 @@ interactions <- function(fit_obj, index_col1 = 1, index_col2 = 2, obs = NULL)
   }
 
 }
-interactions <- memoise::memoize(interactions)
+#interactions <- memoise::memoize(interactions)

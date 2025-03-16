@@ -59,7 +59,7 @@ sensi1D <- function(fit_obj, index_col, h, verbose=TRUE)
   
   return(invisible(res))
 }
-sensi1D <- memoise::memoize(sensi1D)
+#sensi1D <- memoise::memoize(sensi1D)
 
 #' Title
 #'
@@ -135,4 +135,4 @@ sensi2D <- function(fit_obj, index_col1, index_col2, h1, h2, verbose=TRUE)
   
   return(invisible(res))
 }
-sensi2D <- memoise::memoize(sensi2D)
+#sensi2D <- memoise::memoize(sensi2D)
