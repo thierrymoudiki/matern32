@@ -2,26 +2,30 @@
 % Please edit documentation in R/viz.R
 \name{plot_interactions}
 \alias{plot_interactions}
-\title{Title}
+\title{Plot interactions}
 \usage{
 plot_interactions(
   fit_obj,
   var1 = 1,
   var2 = 2,
-  method = c("mars", "poly"),
+  method = c("poly", "mars"),
   degree = 1,
   ...
 )
 }
 \arguments{
-\item{fit_obj}{}
+\item{fit_obj}{Fitted object of class 'matern32'}
 
-\item{var1}{}
+\item{var1}{Covariate 1}
 
-\item{var2}{}
+\item{var2}{Covariate 2}
+
+\item{method}{The method to use for smoothing the interactions}
+
+\item{degree}{The degree of the polynomial to use for smoothing}
 
 \item{...}{}
 }
 \description{
-Title
+Plot interactions
 }

@@ -69,11 +69,25 @@
 #'matern32::summary.matern32(fit_obj)
 #'  
 fit_matern32 <- function(x, y, lambda = 10^seq(-10, 10, length.out = 100),#10^seq(-5, 4, length.out = 100),
-                         l = NULL, method = c("chol", "solve", "svd", "eigen"),
+                         l = NULL, method = c("chol", "solve", "svd", "eigen", "conformal"),
                          with_kmeans = FALSE, centers = NULL, 
                          centering = FALSE, seed = 123, ...)
 {
   method <- match.arg(method)
+
+  if (method=="conformal") {
+    half_n <- floor(nrow(x)/2)
+    x1 <- x[1:half_n,]
+    x2 <- x[(half_n+1):nrow(x),]
+    y1 <- y[1:half_n]
+    y2 <- y[(half_n+1):nrow(x)]
+    fit1 <- fit_matern32(x1, y1, lambda = lambda, l = l, method = "chol", with_kmeans = with_kmeans, centers = centers, centering = centering, seed = seed, ...)
+    fit2 <- fit_matern32(x2, y2, lambda = lambda, l = l, method = "chol", with_kmeans = with_kmeans, centers = centers, centering = centering, seed = seed, ...)
+    calibrated_residuals <- y2 - predict(fit1, x2)
+    fit2$resid <- calibrated_residuals
+    fit2$calibrated_residuals <- calibrated_residuals
+    return(fit2)
+  }
   #
   # train_cov = amp*cov_map(exp_quadratic, x) + eye * (noise + 1e-6)
   # chol = scipy.linalg.cholesky(train_cov, lower=True)

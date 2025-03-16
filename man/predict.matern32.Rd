@@ -4,14 +4,27 @@
 \alias{predict.matern32}
 \title{Predict from Matern 3/2 model}
 \usage{
-\method{predict}{matern32}(fit_obj, newx, ci = NULL)
+\method{predict}{matern32}(
+  fit_obj,
+  newx,
+  level = NULL,
+  method = c("splitconformal", "kde", "surrogate", "bootstrap"),
+  nsim = 250L,
+  B = nsim
+)
 }
 \arguments{
 \item{fit_obj}{Fitted object from \code{fit_matern32}}
 
 \item{newx}{New data matrix}
 
-\item{ci}{Not implemented yet}
+\item{level}{Confidence level for prediction intervals (between 0 and 100)}
+
+\item{method}{Method to use for prediction intervals}
+
+\item{nsim}{Number of simulations to use for prediction}
+
+\item{B}{Alias for \code{nsim}}
 }
 \description{
 Predict from Matern 3/2 model

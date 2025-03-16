@@ -2,7 +2,7 @@
 % Please edit documentation in R/viz.R
 \name{plot.matern32}
 \alias{plot.matern32}
-\title{Title}
+\title{Plot method for matern32 objects}
 \usage{
 plot.matern32(
   fit_obj,
@@ -11,12 +11,12 @@ plot.matern32(
 )
 }
 \arguments{
-\item{fit_obj}{}
+\item{fit_obj}{Fitted object of class 'matern32'}
 
-\item{choice}{}
+\item{choice}{The type of plot to produce (coeffs, GCV, heterogeneity, interactions, residuals)}
 
 \item{...}{}
 }
 \description{
-Title
+Plot method for matern32 objects
 }

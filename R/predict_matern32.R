@@ -2,7 +2,10 @@
 #'
 #' @param fit_obj Fitted object from \code{fit_matern32}
 #' @param newx New data matrix
-#' @param ci Not implemented yet
+#' @param level Confidence level for prediction intervals (between 0 and 100)
+#' @param method Method to use for prediction intervals
+#' @param nsim Number of simulations to use for prediction
+#' @param B Alias for \code{nsim}
 #'
 #' @return
 #' @export
@@ -26,8 +29,40 @@
 #' main = "distribution of in sample bias", 
 #' xlab = "lambda", ylab = "y_hat - y")
 #' 
-predict.matern32 <- function(fit_obj, newx, ci = NULL)
+predict.matern32 <- function(fit_obj, newx, level = NULL, method=c("splitconformal", "kde", "surrogate", "bootstrap"), nsim = 250L, B = nsim)
 {
+  method <- match.arg(method)
+  if (!is.null(level))
+  {
+    preds <- predict.matern32(fit_obj, newx, level = NULL)
+    stopifnot(!is.integer(level) && (level > 0) && (level < 100))
+    if(is.null(fit_obj$calibrated_residuals))
+    {
+      stop("use 'method = conformal' for fitting the model with conformal prediction")
+    }
+
+    if (method == "splitconformal")
+    {
+      abs_cal_res <- abs(fit_obj$calibrated_residuals)
+      multiplier <- quantile(abs_cal_res, probs = level/100)
+      lower <- preds - multiplier
+      upper <- preds + multiplier
+      return(list(preds = preds, lower = lower, upper = upper))
+    }
+
+    if (method %in% c("kde", "surrogate", "bootstrap"))
+    {
+      scaled_cal_res <- scale(fit_obj$calibrated_residuals)
+      sd_cal_res <- sd(fit_obj$calibrated_residuals)
+      n_out <- length(preds)
+      sims_scaled_cal_res <- sapply(seq_len(nsim), function(i) direct_sampling(scaled_cal_res, n=n_out, method = method))      
+      sims <- preds + sd_cal_res * sims_scaled_cal_res
+      lower <- apply(sims, 1, quantile, probs = (1 - level/100)/2)
+      upper <- apply(sims, 1, quantile, probs = 1 - (1 - level/100)/2)
+      return(list(preds = preds, lower = lower, upper = upper, sims = sims))
+    }
+  }
+
   if (is.vector(newx))
     newx <- t(newx)
   

@@ -1,8 +1,9 @@
 
-#' Title
+#' Plot method for matern32 objects
 #'
-#' @param fit_obj 
-#' @param choice 
+#' @param fit_obj Fitted object of class 'matern32'
+#' @param choice The type of plot to produce (coeffs, GCV, heterogeneity, interactions, residuals)
+#  @param ... Additional arguments to pass to the plot functions
 #' @param ... 
 #'
 #' @return
@@ -56,7 +57,6 @@ plot_coeffs <- function(fit_obj, ...)
 #' @param fit_obj 
 #'
 #' @return
-#' @export
 #'
 #' @examples
 plot_GCV <- function(fit_obj, ...){
@@ -96,7 +96,6 @@ plot_loocv <- function(fit_obj, ...){
 #' @param ... 
 #'
 #' @return
-#' @export
 #'
 #' @examples
 plot_heterogeneity <- function(fit_obj, var = 1, ...)
@@ -120,19 +119,20 @@ plot_heterogeneity <- function(fit_obj, var = 1, ...)
 }
 
 
-#' Title
+#' Plot interactions
 #'
-#' @param fit_obj 
-#' @param var1 
-#' @param var2 
+#' @param fit_obj Fitted object of class 'matern32'
+#' @param var1 Covariate 1
+#' @param var2 Covariate 2
+#' @param method The method to use for smoothing the interactions
+#' @param degree The degree of the polynomial to use for smoothing
 #' @param ... 
 #'
 #' @return
-#' @export
 #'
 #' @examples
 plot_interactions <- function(fit_obj, var1 = 1, var2 = 2, 
-                              method=c("mars", "poly"), degree = 1, ...)
+                              method=c("poly", "mars"), degree = 1, ...)
 {
   
   method <- match.arg(method)

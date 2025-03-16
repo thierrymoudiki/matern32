@@ -9,7 +9,7 @@ fit_matern32(
   y,
   lambda = 10^seq(-10, 10, length.out = 100),
   l = NULL,
-  method = c("chol", "solve", "svd", "eigen"),
+  method = c("chol", "solve", "svd", "eigen", "conformal"),
   with_kmeans = FALSE,
   centers = NULL,
   centering = FALSE,
