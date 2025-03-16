@@ -9,7 +9,7 @@ vignette: >
 
 # Install package
 
-```{r}
+```{r eval=FALSE}
 options(repos = c(
                     techtonique = "https://r-packages.techtonique.net",
                     CRAN = "https://cloud.r-project.org"
